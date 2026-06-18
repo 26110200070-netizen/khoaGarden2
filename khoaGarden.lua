@@ -423,6 +423,7 @@ local function notify(t, title, col)
 end
 
 -- Wind UI Window Setup
+WindUI:SetTheme("Plant")
 local Window = WindUI:CreateWindow({
 	Title = "Khoa Dev  >  Grow a Garden 2",
 	Folder = "KhoaDevGarden",
@@ -1427,6 +1428,18 @@ local function setOptimize(on)
 end
 
 --========================== PAGES =================================--
+local function getRobloxParent(parentObj)
+    if typeof(parentObj) ~= "table" then return parentObj end
+    if parentObj.UIElements and parentObj.UIElements.ContainerFrame then
+        return parentObj.UIElements.ContainerFrame
+    elseif parentObj.ElementFrame and parentObj.ElementFrame:FindFirstChild("Outline") and parentObj.ElementFrame.Outline:FindFirstChild("Content") then
+        return parentObj.ElementFrame.Outline.Content
+    elseif parentObj.ElementFrame and parentObj.ElementFrame:FindFirstChild("Content") then
+        return parentObj.ElementFrame.Content
+    end
+    return parentObj
+end
+
 -- Custom template rows for Timers and Stats tabs
 local function tRow(parent, leftText)
     local f = Instance.new("Frame")
@@ -1434,7 +1447,7 @@ local function tRow(parent, leftText)
     f.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     f.BackgroundTransparency = 0.2
     f.BorderSizePixel = 0
-    f.Parent = parent
+    f.Parent = getRobloxParent(parent)
     
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 8)
@@ -1476,7 +1489,7 @@ local function statRow(parent, lbl, col)
     f.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     f.BackgroundTransparency = 0.2
     f.BorderSizePixel = 0
-    f.Parent = parent
+    f.Parent = getRobloxParent(parent)
     
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 8)
@@ -1511,6 +1524,54 @@ local function statRow(parent, lbl, col)
     Rb.Parent = f
     
     return Rb
+end
+
+addGroup("ADMIN")
+do
+    local pAdmin = addTab("ADMIN", "solar:shield-keyhole-bold")
+    local L = oneCol(pAdmin)
+    L:Paragraph({
+        Title = "Admin Khoa Dev - Vo Anh Khoa 207",
+        Desc = "Bản hack tối ưu hóa cho Grow a Garden 2."
+    })
+    
+    local function addIntro(title, desc)
+        L:Paragraph({
+            Title = title,
+            Desc = desc
+        })
+    end
+
+    addIntro("🤖 Tự Động Hóa (Auto Farm)", 
+        "• Tự Động Gieo Hạt: Gieo hạt cá nhân hoặc từ ảnh chụp theo nhiều mẫu (Đầy đủ, Bàn cờ, Theo hàng/cột...).\n" ..
+        "• Gieo Thông Minh: Chỉ gieo loại hạt đắt nhất đang sở hữu.\n" ..
+        "• Tự Thu Hoạch: Gặt trái chín & đột biến cực nhanh.\n" ..
+        "• Tự Bán Quả: Bán nông sản theo chu kỳ hoặc khi đầy túi.\n" ..
+        "• Mở Rộng Đất: Tự mua thêm đất khi đủ tiền sheckles.")
+
+    addIntro("🌙 Đi Trộm Đêm & Phòng Thủ",
+        "• Tự Động Ăn Trộm: Đột nhập vườn người khác trộm quả giá trị cao khi đêm xuống, tự động đem về nhà.\n" ..
+        "• Phòng Thủ Vườn: Tự động dùng xẻng vụt kẻ lạ xâm nhập vườn và thu hoạch khẩn cấp trước khi bị trộm.")
+
+    addIntro("✨ Sự Kiện Trăng & Thú Cưng",
+        "• Săn Gói Hạt Hiếm: Tự động bay đi nhặt các gói hạt giống Vàng/Cầu vồng rơi trên bản đồ.\n" ..
+        "• Thu Thuần Thú Hoang: Tự động bắt thú cưng giá trị cao (Raccoon, Kitsune...) xuất hiện trên map.\n" ..
+        "• Tự Đeo Thú Cưng: Đeo tự động theo giới hạn thú cưng của bạn.")
+
+    addIntro("🛠️ Công Cụ & Thống Kê",
+        "• Thống Kê Lợi Nhuận: Đo lường sheckles kiếm được mỗi phút/giờ và giá trị balo thực tế.\n" ..
+        "• Ảnh Chụp Vườn: Chụp snapshot bố cục vườn và xây dựng lại.\n" ..
+        "• ESP Cây Trồng: Hiện viền sáng cho cây đã chín hoặc quả đột biến ở gần.\n" ..
+        "• Dịch Chuyển: Di chuyển nhanh tới các shop và NPC.")
+
+    addIntro("⚡ Tính Năng Người Chơi",
+        "• Hack Di Chuyển: Tốc độ đi bộ, lực nhảy, nhảy vô hạn, đi xuyên tường (noclip), bay tự do.")
+
+    addIntro("⚙️ Tiện Ích Khác & Server",
+        "• Tự Vận Hành Lũy Kế: Chu trình treo máy khép kín tự sinh lời nông sản.\n" ..
+        "• Tối Ưu FPS: Flat texture, tắt hiệu ứng giúp mượt game.\n" ..
+        "• Chống Treo Máy: Ngăn bị kick do afk 20 phút.\n" ..
+        "• Nhảy Server / Webhook: Tự động săn hạt hiếm và gửi thông báo qua Discord Webhook.")
 end
 
 addGroup("Tự Động Hóa")
