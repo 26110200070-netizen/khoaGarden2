@@ -39,7 +39,7 @@ end
 --========================== GAME API ==============================--
 local Net = (function() local ok,m = pcall(function() return require(ReplicatedStorage.SharedModules.Networking) end) return ok and m or nil end)()
 local PSC = (function() local ok,m = pcall(function() return require(ReplicatedStorage.ClientModules.PlayerStateClient) end) return ok and m or nil end)()
-if not Net then warn("[360's GAG] Networking module missing - aborting."); return end
+if not Net then warn("[Khoa Dev > Grow a Garden 2] Thiếu module Networking - hủy bỏ."); return end
 
 local SeedData = (function() local ok,d = pcall(function() return require(ReplicatedStorage.SharedModules.SeedData) end) return ok and d or {} end)()
 local SeedPrice = {}
@@ -71,7 +71,7 @@ end
 --========================== LIFECYCLE =============================--
 local Hub = { running = true, conns = {} }
 local genv = (getgenv and getgenv()) or _G
-if genv.GAG360_unload then pcall(genv.GAG360_unload) end
+if genv.KhoaDevGarden_unload then pcall(genv.KhoaDevGarden_unload) end
 local function track(conn) table.insert(Hub.conns, conn); return conn end
 local function spawnLoop(interval, fn)
     task.spawn(function()
@@ -142,7 +142,7 @@ local function humanoid() local c = char() return c and c:FindFirstChildOfClass(
 local function fire(pkt, ...) local a = {...} return pcall(function() return pkt:Fire(table.unpack(a)) end) end
 local function teleportTo(pos) local r = hrp() if r and pos then r.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0)) end end
 local toast  -- cool in-hub slide-in notification (assigned once the GUI exists)
-local function notify(t, title, col) if toast then toast(title or "360's GAG", t, col) end pcall(function() Net.Notification:Fire("360's GAG", t) end) end
+local function notify(t, title, col) if toast then toast(title or "Khoa Dev > Grow a Garden 2", t, col) end pcall(function() Net.Notification:Fire("Khoa Dev > Grow a Garden 2", t) end) end
 
 local function setCharCollide(on)
     local c = char(); if not c then return end
@@ -345,11 +345,11 @@ end
 
 ----====================== WIND UI SYSTEM ==========================--
 local C = {
-    accent = Color3.fromRGB(196,30,58),
-    green = Color3.fromRGB(80,220,130),
-    text = Color3.fromRGB(223,223,229),
-    sub = Color3.fromRGB(138,138,148),
-    white = Color3.fromRGB(240,240,245)
+    accent = Color3.fromRGB(16, 197, 80),
+    green = Color3.fromRGB(16, 197, 80),
+    text = Color3.fromRGB(223, 223, 229),
+    sub = Color3.fromRGB(138, 138, 148),
+    white = Color3.fromRGB(240, 240, 245)
 }
 -- number / money formatting
 local function commafy(n)
@@ -402,35 +402,35 @@ local function setStatus(t)
         c.Parent = lbl
         
         local s = Instance.new("UIStroke")
-        s.Color = Color3.fromRGB(196, 30, 58)
+        s.Color = Color3.fromRGB(16, 197, 80)
         s.Thickness = 1
         s.Parent = lbl
         
         StatusLabel = lbl
     end
-    StatusLabel.Text = "Status: " .. t
+    StatusLabel.Text = "Trạng thái: " .. t
 end
 
 local function notify(t, title, col)
     pcall(function()
         WindUI:Notify({
-            Title = title or "360's GAG",
+            Title = title or "Khoa Dev > Grow a Garden 2",
             Content = t,
             Duration = 5
         })
     end)
-    pcall(function() Net.Notification:Fire("360's GAG", t) end)
+    pcall(function() Net.Notification:Fire("Khoa Dev > Grow a Garden 2", t) end)
 end
 
 -- Wind UI Window Setup
 local Window = WindUI:CreateWindow({
-	Title = "360's GAG  |  Grow a Garden 2",
-	Folder = "GAG360",
+	Title = "Khoa Dev  >  Grow a Garden 2",
+	Folder = "KhoaDevGarden",
 	Icon = "solar:leaf-bold-duotone",
 	NewElements = true,
 	HideSearchBar = true,
 	OpenButton = {
-		Title = "Open GAG",
+		Title = "Mở Khoa Dev UI",
 		CornerRadius = UDim.new(1, 0),
 		StrokeThickness = 3,
 		Enabled = true,
@@ -438,8 +438,8 @@ local Window = WindUI:CreateWindow({
 		OnlyMobile = false,
 		Scale = 0.5,
 		Color = ColorSequence.new(
-			Color3.fromRGB(196, 30, 58),
-			Color3.fromRGB(120, 22, 40)
+			Color3.fromRGB(16, 197, 80),
+			Color3.fromRGB(162, 255, 48)
 		),
 	},
 })
@@ -718,10 +718,10 @@ function Hub.unload()
     for k, v in pairs(S) do if type(v) == "boolean" then S[k] = false end end
     pcall(function() Window:Destroy() end)
     pcall(function() game:GetService("CoreGui"):FindFirstChild("GAG360Status"):Destroy() end)
-    print("[360's GAG] unloaded.")
+    print("[Khoa Dev > Grow a Garden 2] đã gỡ bỏ hoàn toàn.")
 end
-genv.GAG360_unload = Hub.unload
-genv.GAG360_notify = function(msg, title, col) notify(msg, title, col) end
+genv.KhoaDevGarden_unload = Hub.unload
+genv.KhoaDevGarden_notify = function(msg, title, col) notify(msg, title, col) end
 track({ Disconnect = function() pcall(function() Window:Destroy() end) pcall(function() game:GetService("CoreGui"):FindFirstChild("GAG360Status"):Destroy() end) end })
 
 --========================== FEATURE LOOPS =========================--
@@ -1513,143 +1513,160 @@ local function statRow(parent, lbl, col)
     return Rb
 end
 
-addGroup("Automation")
+addGroup("Tự Động Hóa")
 
 -- FARM
 do
-    local p = addTab("Farm", "solar:home-2-bold")
+    local p = addTab("Nông Trại", "solar:home-2-bold")
     local L, R = twoCol(p)
     -- Planting
-    colTitle(L, "Planting"); subTitle(L, "Auto Plant")
-    howItWorks(L, "Equips each owned seed and plants it across your plot's soil. Leave the picker empty to plant every seed you own, or choose specific ones.")
-    toggleRow(L, "Auto Plant", "Plants your owned seeds on a loop.", "autoPlant")
-    dropdownRow(L, "Seeds To Plant", "Only seeds in your inventory. Empty = plant them all.", getOwnedSeedOptions, S.plantSeeds, nil, nil, seedPriceTag)
-    choiceRow(L, "Plant Pattern", "How seeds are laid out on the soil.", function() return PLANT_PATTERNS end, function() return S.plantPattern end, function(v) S.plantPattern = v end)
+    colTitle(L, "Gieo Hạt"); subTitle(L, "Tự Động Gieo Hạt")
+    howItWorks(L, "Tự động gieo tất cả hạt giống bạn sở hữu lên khu vườn. Nếu để trống bộ lọc, nó sẽ gieo toàn bộ hạt giống có sẵn, hoặc bạn có thể chọn các loại cụ thể.")
+    toggleRow(L, "Tự Động Gieo Hạt", "Tự động gieo hạt giống bạn sở hữu theo vòng lặp.", "autoPlant")
+    dropdownRow(L, "Hạt Giống Cần Gieo", "Chỉ gồm hạt giống trong kho của bạn. Để trống = gieo tất cả.", getOwnedSeedOptions, S.plantSeeds, nil, nil, seedPriceTag)
+    
+    local PLANT_PATTERNS_VN = { "Đầy Đủ", "Bàn Cờ", "Theo Hàng", "Theo Cột", "Đường Chéo", "Giãn Cách" }
+    local PLANT_PATTERN_MAP = {
+        ["Đầy Đủ"] = "Fill", ["Bàn Cờ"] = "Checkerboard", ["Theo Hàng"] = "Rows",
+        ["Theo Cột"] = "Columns", ["Đường Chéo"] = "Diagonal", ["Giãn Cách"] = "Spaced"
+    }
+    local PLANT_PATTERN_REV = {
+        ["Fill"] = "Đầy Đủ", ["Checkerboard"] = "Bàn Cờ", ["Rows"] = "Theo Hàng",
+        ["Columns"] = "Theo Cột", ["Diagonal"] = "Đường Chéo", ["Spaced"] = "Giãn Cách"
+    }
+    choiceRow(L, "Mẫu Bố Trí", "Cách hạt giống được rải trên đất ruộng.", function() return PLANT_PATTERNS_VN end, function() return PLANT_PATTERN_REV[S.plantPattern] or "Đầy Đủ" end, function(v) S.plantPattern = PLANT_PATTERN_MAP[v] or "Fill" end)
     
     local plantSourceDropdown
-    plantSourceDropdown = choiceRow(L, "Plant Source", "My Seeds, or replant a saved garden snapshot.", function() local t={"My Seeds"} for _,n in ipairs(snapshotNames()) do t[#t+1]=n end return t end, function() return S.plantSource end, function(v) S.plantSource = v end)
+    plantSourceDropdown = choiceRow(L, "Nguồn Hạt Giống", "Gieo hạt từ kho cá nhân hoặc tái tạo từ ảnh chụp vườn.", function()
+        local t = {"Kho Hạt Giống"}
+        for _, n in ipairs(snapshotNames()) do t[#t+1] = n end
+        return t
+    end, function() return S.plantSource == "My Seeds" and "Kho Hạt Giống" or S.plantSource end, function(v)
+        S.plantSource = v == "Kho Hạt Giống" and "My Seeds" or v
+    end)
     
-    toggleRow(L, "Smart Replant", "Only plant the most profitable seed you own.", "smartReplant")
-    actionRow(L, "Plant Once Now", "Run a single planting pass.", function()
+    toggleRow(L, "Gieo Hạt Thông Minh", "Chỉ gieo loại hạt giống có giá trị cao nhất mà bạn sở hữu.", "smartReplant")
+    actionRow(L, "Gieo Hạt Ngay", "Chạy một đợt gieo hạt ngay lập tức.", function()
         local plot = myPlot(); if not plot then return end
         local d = getData(); local seeds = d and d.Inventory and d.Inventory.Seeds; if not seeds then return end
         local useF = next(S.plantSeeds) ~= nil; local tp = {}
         for n, c in pairs(seeds) do if (not useF) or S.plantSeeds[n] then for _=1,math.min(c or 0,40) do tp[#tp+1]=n end end end
         local free = freePlantPositions(plot)
         for i = 1, math.min(#free, #tp) do fire(Net.Plant.PlantSeed, free[i], tp[i], plot) task.wait(S.plantDelay) end
-        setStatus("planted " .. math.min(#free, #tp))
+        setStatus("đã gieo " .. math.min(#free, #tp))
     end)
-    subTitle(L, "Garden Size")
-    toggleRow(L, "Auto Expand Garden", "Buys the next expansion whenever you can afford it.", "autoExpand")
-    actionRow(L, "Expand Garden Now", "Buy one garden expansion.", function()
+    subTitle(L, "Kích Thước Vườn")
+    toggleRow(L, "Tự Động Mở Rộng", "Tự động mua thêm đất mở rộng vườn khi đủ tiền.", "autoExpand")
+    actionRow(L, "Mở Rộng Ngay", "Mua thêm một ô đất mở rộng.", function()
         local plot = myPlot(); if not plot then return end
         local before = tonumber(plot:GetAttribute("GardenExpansion")) or 0
         fire(Net.Actions.ExpandGarden); task.wait(0.8)
         local after = tonumber(plot:GetAttribute("GardenExpansion")) or before
-        setStatus(after > before and ("expanded to size " .. after) or "can't expand (need more money or maxed)")
+        setStatus(after > before and ("đất mở rộng thành kích thước " .. after) or "không thể mở rộng (không đủ tiền hoặc đã tối đa)")
     end)
-    subTitle(L, "Timing")
-    sliderRow(L, "Keep In Reserve (per seed)", 0, 25, S.plantReserve, 0, function(v) S.plantReserve = v end)
-    sliderRow(L, "Max Plants / Cycle", 1, 80, S.maxPerCycle, 0, function(v) S.maxPerCycle = v end)
-    sliderRow(L, "Plant Delay", 0.05, 1, S.plantDelay, 2, function(v) S.plantDelay = v end)
-    sliderRow(L, "Loop Delay", 0.5, 10, S.plantLoop, 1, function(v) S.plantLoop = v end)
+    subTitle(L, "Thời Gian & Giới Hạn")
+    sliderRow(L, "Hạt Dự Trữ (mỗi loại)", 0, 25, S.plantReserve, 0, function(v) S.plantReserve = v end)
+    sliderRow(L, "Hạt Gieo Tối Đa / Chu Kỳ", 1, 80, S.maxPerCycle, 0, function(v) S.maxPerCycle = v end)
+    sliderRow(L, "Độ Trễ Gieo (giây)", 0.05, 1, S.plantDelay, 2, function(v) S.plantDelay = v end)
+    sliderRow(L, "Chu Kỳ Lặp (giây)", 0.5, 10, S.plantLoop, 1, function(v) S.plantLoop = v end)
+    
     -- Harvest
-    colTitle(R, "Harvest"); subTitle(R, "Auto Harvest")
-    howItWorks(R, "Collects grown fruit on your plot by firing CollectFruit for each. Use the filters below to only pick up certain crops or mutations.")
-    toggleRow(R, "Auto Harvest", "Collects all ready fruit on your plot on a loop.", "autoCollect")
-    dropdownRow(R, "Only These Crops", "Empty = harvest every crop type.", getHarvestOptions, S.harvestCrops, nil, nil)
-    toggleRow(R, "Only Harvest Mutated Fruit", "Skips any fruit that has no mutation.", "harvestMutsOnly")
-    sliderRow(R, "Per-Fruit Delay", 0.02, 0.5, S.perFruitDelay, 2, function(v) S.perFruitDelay = v end)
-    sliderRow(R, "Loop Delay", 0.5, 10, S.harvestLoop, 1, function(v) S.harvestLoop = v end)
-    actionRow(R, "Harvest Now", "Collect every ready fruit immediately.", function()
-        setStatus("harvested " .. harvestAll(false))
+    colTitle(R, "Thu Hoạch"); subTitle(R, "Tự Động Thu Hoạch")
+    howItWorks(R, "Tự động thu hoạch trái cây chín trên plot của bạn bằng cách gửi tín hiệu CollectFruit. Sử dụng các bộ lọc bên dưới để chỉ thu hoạch các cây cụ thể hoặc đột biến.")
+    toggleRow(R, "Tự Động Thu Hoạch", "Thu hoạch tất cả trái cây chín trên plot theo vòng lặp.", "autoCollect")
+    dropdownRow(R, "Chỉ Thu Hoạch Cây Này", "Để trống = thu hoạch tất cả các loại cây.", getHarvestOptions, S.harvestCrops, nil, nil)
+    toggleRow(R, "Chỉ Thu Hoạch Trái Đột Biến", "Bỏ qua các trái cây không có đột biến.", "harvestMutsOnly")
+    sliderRow(R, "Độ Trễ Mỗi Trái (giây)", 0.02, 0.5, S.perFruitDelay, 2, function(v) S.perFruitDelay = v end)
+    sliderRow(R, "Chu Kỳ Lặp (giây)", 0.5, 10, S.harvestLoop, 1, function(v) S.harvestLoop = v end)
+    actionRow(R, "Thu Hoạch Ngay", "Thu hoạch ngay lập tức tất cả trái cây chín.", function()
+        setStatus("đã thu hoạch " .. harvestAll(false))
     end)
-    subTitle(R, "Sell")
-    toggleRow(R, "Auto Sell (timed)", "Sells everything every interval.", "autoSell")
-    sliderRow(R, "Sell Interval (s)", 5, 120, S.sellInterval, 0, function(v) S.sellInterval = v end)
-    toggleRow(R, "Sell When Backpack Full", "Auto-sells the moment your backpack fills.", "sellOnFull")
-    actionRow(R, "Sell All Now", "Sell every harvested fruit.", function() fire(Net.NPCS.SellAll); setStatus("sold all") end)
+    subTitle(R, "Bán Trái Cây")
+    toggleRow(R, "Tự Động Bán (theo giờ)", "Tự động bán toàn bộ trái cây sau mỗi khoảng thời gian.", "autoSell")
+    sliderRow(R, "Khoảng Thời Gian Bán (giây)", 5, 120, S.sellInterval, 0, function(v) S.sellInterval = v end)
+    toggleRow(R, "Bán Khi Đầy Túi", "Tự động bán ngay lập tức khi balo của bạn bị đầy.", "sellOnFull")
+    actionRow(R, "Bán Tất Cả Ngay", "Bán toàn bộ trái cây đã thu hoạch.", function() fire(Net.NPCS.SellAll); setStatus("đã bán tất cả") end)
 end
 
 -- SHOP
 do
-    local p = addTab("Shop", "🛒")
+    local p = addTab("Cửa Hàng", "🛒")
     local L, R = twoCol(p)
-    subTitle(L, "Seeds")
-    howItWorks(L, "Buys the seeds you tick the instant they restock. Empty picker = buy every seed in stock you can afford.")
-    toggleRow(L, "Auto Buy Seeds", "Buys selected seeds (or all if empty).", "autoBuySeed")
-    dropdownRow(L, "Seeds To Buy", "Empty = buy everything in stock.", getSeedOptions, S.buySeeds, seedStockOf, nil, seedPriceTag)
-    actionRow(L, "Buy Now", "Buy your picked seeds (or all if empty) in stock.", function()
+    subTitle(L, "Hạt Giống")
+    howItWorks(L, "Tự động mua các loại hạt giống bạn đã chọn ngay khi cửa hàng hồi hàng. Để trống = mua toàn bộ loại hạt giống có sẵn trong tầm giá.")
+    toggleRow(L, "Tự Động Mua Hạt Giống", "Mua hạt giống đã chọn (hoặc tất cả nếu để trống).", "autoBuySeed")
+    dropdownRow(L, "Hạt Giống Cần Mua", "Để trống = mua tất cả hạt giống có hàng.", getSeedOptions, S.buySeeds, seedStockOf, nil, seedPriceTag)
+    actionRow(L, "Mua Hạt Giống Ngay", "Mua hạt giống đã chọn (hoặc tất cả nếu để trống) đang có sẵn.", function()
         local it = seedStockItems(); if not it then return end
         local anySel = next(S.buySeeds) ~= nil
         for _, sv in ipairs(it:GetChildren()) do if sv:IsA("ValueBase") and sv.Value > 0 and ((not anySel) or S.buySeeds[sv.Name] == true) then fire(Net.SeedShop.PurchaseSeed, sv.Name) task.wait(0.08) end end
-        setStatus("bought seeds")
+        setStatus("đã mua hạt giống")
     end)
 
-    subTitle(R, "Gear & Crates")
-    howItWorks(R, "Buys gear (sprinklers, mushrooms, pots, traps...) on restock. Empty gear picker = buy EVERY gear in stock.")
-    toggleRow(R, "Auto Buy Gears", "Buys selected gear (or all if empty).", "autoBuyGear")
-    dropdownRow(R, "Gear To Buy", "Empty = buy everything in stock.", getGearOptions, S.buyGears, gearStockOf, nil)
-    toggleRow(R, "Auto Buy Crates", "Buys every crate in stock on restock.", "autoBuyCrate")
+    subTitle(R, "Trang Bị & Rương")
+    howItWorks(R, "Tự động mua trang bị (bình tưới nước, nấm, chậu, bẫy...) khi hồi hàng. Để trống = mua MỌI trang bị có sẵn.")
+    toggleRow(R, "Tự Động Mua Trang Bị", "Mua trang bị đã chọn (hoặc tất cả nếu để trống).", "autoBuyGear")
+    dropdownRow(R, "Trang Bị Cần Mua", "Để trống = mua tất cả trang bị có sẵn.", getGearOptions, S.buyGears, gearStockOf, nil)
+    toggleRow(R, "Tự Động Mua Rương", "Tự động mua mọi rương có sẵn khi hồi hàng.", "autoBuyCrate")
 end
 
 -- STEAL
 do
-    local p = addTab("Steal", "🌙")
+    local p = addTab("Ăn Trộm", "🌙")
     local L, R = twoCol(p)
-    colTitle(L, "Night Raiding"); subTitle(L, "Auto Steal")
-    howItWorks(L, "Steals ripe fruit from every other garden, most valuable first. Grabs multiple fruit per plant in one trip. Works only at NIGHT.")
-    toggleRow(L, "Auto Steal", "Raid all gardens by fruit value.", "autoSteal")
-    toggleRow(L, "Return Home After", "Teleport back to your garden each pass.", "stealReturn")
-    sliderRow(L, "Fruits Per Steal", 1, 10, S.stealMult, 0, function(v) S.stealMult = v end)
-    colTitle(R, "Manual"); subTitle(R, "Actions")
-    actionRow(R, "Steal Most Valuable", "Grab the single highest-value fruit now.", function()
-        if not isNight() then setStatus("not night - cannot steal") return end
-        local t = stealTargets(); if t[1] then stealModel(t[1].model, S.stealMult); setStatus("stole fruit worth " .. math.floor(t[1].value)) else setStatus("nothing to steal") end
+    colTitle(L, "Đi Trộm Đêm"); subTitle(L, "Tự Động Trộm")
+    howItWorks(L, "Tự động đột nhập và trộm trái cây chín từ vườn nhà người khác, ưu tiên giá trị cao nhất. Có thể lấy nhiều trái mỗi cây. Chỉ hoạt động vào BAN ĐÊM.")
+    toggleRow(L, "Tự Động Đi Trộm", "Đột kích tất cả vườn nhà người khác để trộm quả.", "autoSteal")
+    toggleRow(L, "Trở Về Nhà Sau Khi Trộm", "Tự động dịch chuyển về vườn nhà bạn sau mỗi đợt.", "stealReturn")
+    sliderRow(L, "Số Quả Trộm Mỗi Lần", 1, 10, S.stealMult, 0, function(v) S.stealMult = v end)
+    colTitle(R, "Hành Động"); subTitle(R, "Hành Động Thủ Công")
+    actionRow(R, "Trộm Quả Đắt Nhất", "Trộm một trái cây có giá trị cao nhất ngay lập tức.", function()
+        if not isNight() then setStatus("không phải ban đêm - không thể trộm") return end
+        local t = stealTargets(); if t[1] then stealModel(t[1].model, S.stealMult); setStatus("đã trộm trái cây trị giá " .. math.floor(t[1].value)) else setStatus("không có gì để trộm") end
     end)
 end
 
 -- DEFENSE
 do
-    local p = addTab("Defense", "🛡️")
+    local p = addTab("Phòng Thủ", "🛡️")
     local L = oneCol(p)
-    colTitle(L, "Protect Your Garden"); subTitle(L, "Defense")
-    howItWorks(L, "Panic harvest instantly collects all your ripe crops the moment night begins, before thieves can reach them. Retaliate shovels anyone standing on your plot.")
-    toggleRow(L, "Panic Harvest At Night", "Grab all ripe fruit when night starts.", "panicHarvest")
-    toggleRow(L, "Retaliate (shovel intruders)", "Hit any non-owner standing in your plot.", "retaliate")
-    actionRow(L, "Harvest Everything Now", "Emergency-collect all ripe fruit.", function() setStatus("harvested " .. harvestAll(false)) end)
+    colTitle(L, "Bảo Vệ Vườn"); subTitle(L, "Hệ Thống Phòng Thủ")
+    howItWorks(L, "Tính năng Thu Hoạch Khẩn Cấp tự động gặt hái tất cả cây chín ngay khi đêm bắt đầu trước khi kẻ trộm kịp tới. Tính năng Đánh Trả tự động dùng xẻng vụt bất kỳ ai đứng trên đất của bạn.")
+    toggleRow(L, "Panic Harvest At Night", "Gặt tất cả trái chín ngay khi trời tối.", "panicHarvest")
+    toggleRow(L, "Đánh Trả (vụt xẻng kẻ đột nhập)", "Tự động đánh trả người lạ đứng trên plot của bạn.", "retaliate")
+    actionRow(L, "Thu Hoạch Khẩn Cấp Ngay", "Thu hoạch toàn bộ trái chín lập tức.", function() setStatus("đã thu hoạch " .. harvestAll(false)) end)
 end
 
 -- EVENT
 do
-    local p = addTab("Event", "✨")
+    local p = addTab("Sự Kiện", "✨")
     local L = oneCol(p)
-    colTitle(L, "Gold Moon"); subTitle(L, "Seed Pack Grabber")
-    howItWorks(L, "During the Gold Moon, Gold/Rainbow seed packs spawn around the map. The hub flies to one and completes its hold-to-claim prompt. It only returns to your garden once the event ends.")
-    toggleRow(L, "Auto Grab Seed Packs", "Fly to and claim spawned packs.", "autoGrabPacks")
-    toggleRow(L, "Rare Only (Gold / Rainbow)", "Ignore ordinary seed packs.", "grabRareOnly")
-    toggleRow(L, "Return When Event Ends", "Go home only after the night ends.", "packReturn")
-    toggleRow(L, "Notify On Rare Spawn", "Alert when a Gold/Rainbow spawns.", "notifyRare")
-    actionRow(L, "Grab Nearest Pack Now", "Claim the closest spawned pack.", function()
+    colTitle(L, "Sự Kiện Trăng"); subTitle(L, "Nhặt Gói Hạt Giống")
+    howItWorks(L, "Trong sự kiện Gold Moon, các gói hạt giống Vàng/Cầu vồng sẽ rơi ngẫu nhiên trên bản đồ. Script sẽ tự bay tới và nhặt chúng. Chỉ quay về vườn khi sự kiện kết thúc.")
+    toggleRow(L, "Tự Động Nhặt Gói Hạt", "Tự bay tới và nhặt các gói hạt giống rơi ra.", "autoGrabPacks")
+    toggleRow(L, "Chỉ Nhặt Loại Hiếm", "Bỏ qua các gói hạt giống thường, chỉ nhặt Vàng/Cầu Vồng.", "grabRareOnly")
+    toggleRow(L, "Về Nhà Khi Hết Sự Kiện", "Chỉ dịch chuyển về vườn sau khi đêm kết thúc.", "packReturn")
+    toggleRow(L, "Thông Báo Khi Có Hạt Hiếm", "Cảnh báo khi có gói hạt giống Vàng/Cầu Vồng xuất hiện.", "notifyRare")
+    actionRow(L, "Nhặt Gói Gần Nhất Ngay", "Thu thập gói hạt giống ở gần bạn nhất.", function()
         local root = hrp(); if not root then return end
         local map = Workspace:FindFirstChild("Map"); local locs = map and map:FindFirstChild("SeedPackSpawnServerLocations")
-        if not locs or #locs:GetChildren() == 0 then setStatus("no pack spawned right now") return end
+        if not locs or #locs:GetChildren() == 0 then setStatus("không có gói hạt giống nào xuất hiện") return end
         local best, bestD
         for _, loc in ipairs(locs:GetChildren()) do local d = (loc.Position - root.Position).Magnitude if d < (bestD or math.huge) then best, bestD = loc, d end end
-        if best then grabPack(best); setStatus("grabbed nearest pack") end
+        if best then grabPack(best); setStatus("đã nhặt gói hạt giống gần nhất") end
     end)
 end
 
-addGroup("Garden")
+addGroup("Khu Vườn")
 
 -- TIMERS
 do
-    local p = addTab("Timers", "solar:clock-circle-bold")
+    local p = addTab("Thời Gian", "solar:clock-circle-bold")
     local L, R = twoCol(p)
-    colTitle(L, "Active Event"); subTitle(L, "Cycle")
+    colTitle(L, "Sự Kiện Hiện Tại"); subTitle(L, "Chu Kỳ Ngày Đêm")
     local evL, evR = tRow(L, "-")
-    subTitle(R, "Shop Restocks")
-    local _, sR = tRow(R, "Seed shop"); local _, gR = tRow(R, "Gear shop"); local _, cR = tRow(R, "Crate shop")
+    subTitle(R, "Thời Gian Hồi Hàng")
+    local _, sR = tRow(R, "Cửa hàng hạt"); local _, gR = tRow(R, "Cửa hàng đồ"); local _, cR = tRow(R, "Cửa hàng rương")
     spawnLoop(1, function()
         if not Window.Visible then return end
         local raw, _, endsAt = currentEvent()
@@ -1662,78 +1679,78 @@ end
 
 -- ITEMS
 do
-    local p = addTab("Items", "solar:box-bold")
+    local p = addTab("Vật Phẩm", "solar:box-bold")
     local L, R = twoCol(p)
-    subTitle(L, "Auto Open")
-    toggleRow(L, "Auto Open Eggs", "Opens every egg you own on a loop.", "autoEggs")
-    toggleRow(L, "Auto Open Crates", "Opens every crate you own on a loop.", "autoCrates")
-    toggleRow(L, "Auto Open Seed Packs", "Opens every seed pack on a loop.", "autoPacks")
-    actionRow(L, "Open All Eggs", "Open your whole egg inventory now.", function() local d = getData() local b = d and d.Inventory and d.Inventory.Eggs if b then for n in pairs(b) do task.spawn(function() fire(Net.Egg.OpenEgg, n) end) task.wait(0.15) end end setStatus("opened eggs") end)
-    actionRow(L, "Open All Crates", "Open your whole crate inventory now.", function() local d = getData() local b = d and d.Inventory and d.Inventory.Crates if b then for n in pairs(b) do task.spawn(function() fire(Net.Crate.OpenCrate, n) end) task.wait(0.15) end end setStatus("opened crates") end)
-    actionRow(L, "Open All Seed Packs", "Open your whole seed-pack inventory now.", function() local d = getData() local b = d and d.Inventory and d.Inventory.SeedPacks if b then for n in pairs(b) do task.spawn(function() fire(Net.SeedPack.OpenSeedPack, n) end) task.wait(0.15) end end setStatus("opened packs") end)
+    subTitle(L, "Tự Động Mở")
+    toggleRow(L, "Tự Động Mở Trứng", "Tự động mở mọi quả trứng bạn sở hữu theo vòng lặp.", "autoEggs")
+    toggleRow(L, "Tự Động Mở Rương Đồ", "Tự động mở mọi rương trang bị bạn sở hữu theo vòng lặp.", "autoCrates")
+    toggleRow(L, "Tự Động Mở Gói Hạt Giống", "Tự động mở mọi gói hạt giống.", "autoPacks")
+    actionRow(L, "Mở Toàn Bộ Trứng", "Mở tất cả trứng trong kho ngay.", function() local d = getData() local b = d and d.Inventory and d.Inventory.Eggs if b then for n in pairs(b) do task.spawn(function() fire(Net.Egg.OpenEgg, n) end) task.wait(0.15) end end setStatus("đã mở trứng") end)
+    actionRow(L, "Mở Toàn Bộ Rương Đồ", "Mở tất cả rương đồ trong kho ngay.", function() local d = getData() local b = d and d.Inventory and d.Inventory.Crates if b then for n in pairs(b) do task.spawn(function() fire(Net.Crate.OpenCrate, n) end) task.wait(0.15) end end setStatus("đã mở rương") end)
+    actionRow(L, "Mở Toàn Bộ Gói Hạt Giống", "Mở tất cả gói hạt giống trong kho ngay.", function() local d = getData() local b = d and d.Inventory and d.Inventory.SeedPacks if b then for n in pairs(b) do task.spawn(function() fire(Net.SeedPack.OpenSeedPack, n) end) task.wait(0.15) end end setStatus("đã mở gói hạt") end)
 
-    subTitle(R, "Garden Snapshots")
-    howItWorks(R, "Stand in any garden and snapshot it to capture exactly which seeds (and how many) plus its building layout. Then pick the snapshot as your Plant Source on the Farm tab to replant it, or use Auto Build to recreate the buildings.")
+    subTitle(R, "Ảnh Chụp Vườn")
+    howItWorks(R, "Đứng ở bất kỳ khu vườn nào và chụp snapshot để ghi lại chính xác loại hạt giống và cách bố trí vật phẩm. Sau đó, bạn có thể chọn snapshot đó làm Nguồn Gieo Hạt ở tab Nông Trại để tự động gieo lại, hoặc dùng Tự Động Xây Dựng để tái tạo trang bị.")
     local snapName = "Snapshot 1"
-    inputRow(R, "Snapshot Name", "Name to save the capture under.", snapName, "Snapshot 1", function(t) if t and t ~= "" then snapName = t end end)
-    actionRow(R, "Snapshot This Garden", "Capture the garden you're standing in.", function()
+    inputRow(R, "Tên Ảnh Chụp", "Đặt tên để lưu giữ ảnh chụp vườn.", snapName, "Ảnh Chụp 1", function(t) if t and t ~= "" then snapName = t end end)
+    actionRow(R, "Chụp Khu Vườn Này", "Chụp lại bố cục khu vườn bạn đang đứng.", function()
         local ok, msg = captureSnapshot(snapName)
         if ok then
-            notify('Saved "' .. snapName .. '" - ' .. msg, "Garden Snapshot", C.green)
+            notify('Đã lưu "' .. snapName .. '" - ' .. msg, "Ảnh Chụp Vườn", C.green)
             -- update plant source dropdown values instantly
             if plantSourceDropdown and plantSourceDropdown.refresh then plantSourceDropdown.refresh() end
         else
             setStatus(tostring(msg))
         end
     end)
-    subTitle(R, "Auto Build")
-    toggleRow(R, "Auto Build Snapshot", "Recreate the source snapshot's buildings (experimental).", "autoBuild")
-    actionRow(R, "Build Snapshot Now", "Place the source snapshot's buildings once.", function() buildSnapshot() end)
-    subTitle(R, "Cleanup")
-    dropdownRow(R, "Plants To Remove", "Pick crop types, then Remove Selected.", getPlantedOptions, S.removeCrops, nil, nil)
-    actionRow(R, "Remove Selected", "Shovel only the picked crop types.", function()
-        if not next(S.removeCrops) then setStatus("pick crops to remove first") return end
-        setStatus("removing selected...") task.spawn(function() local n = removeSelectedPlants() setStatus("removed " .. n .. " plants") end)
+    subTitle(R, "Tự Động Xây Dựng")
+    toggleRow(R, "Tự Động Xây Theo Ảnh Chụp", "Đặt lại các trang bị/vật phẩm theo ảnh chụp (thử nghiệm).", "autoBuild")
+    actionRow(R, "Xây Theo Ảnh Chụp Ngay", "Đặt trang bị theo ảnh chụp vườn một lần.", function() buildSnapshot() end)
+    subTitle(R, "Dọn Dẹp Khu Vườn")
+    dropdownRow(R, "Cây Cần Xóa", "Chọn loại cây cần nhổ, sau đó bấm Nhổ Cây Đã Chọn.", getPlantedOptions, S.removeCrops, nil, nil)
+    actionRow(R, "Nhổ Cây Đã Chọn", "Chỉ đào những loại cây đã được tick ở trên.", function()
+        if not next(S.removeCrops) then setStatus("hãy chọn cây trồng cần xóa trước") return end
+        setStatus("đang dọn dẹp...") task.spawn(function() local n = removeSelectedPlants() setStatus("đã nhổ " .. n .. " cây") end)
     end)
-    actionRow(R, "Remove All Plants", "Shovel up every plant on your plot.", function() setStatus("removing plants...") task.spawn(function() local n = removeAllPlants() setStatus("removed " .. n .. " plants") end) end)
-    actionRow(R, "Remove All Buildings", "Pick up every building on your plot.", function() setStatus("removing buildings...") task.spawn(function() local n = removeAllBuildings() setStatus("removed " .. n .. " buildings") end) end)
+    actionRow(R, "Nhổ Toàn Bộ Cây", "Đào bỏ toàn bộ cây trồng trong vườn nhà bạn.", function() setStatus("đang nhổ cây...") task.spawn(function() local n = removeAllPlants() setStatus("đã nhổ tất cả cây") end) end)
+    actionRow(R, "Dọn Tất Cả Vật Phẩm", "Thu hồi mọi trang bị/vật phẩm trên ruộng nhà bạn.", function() setStatus("đang thu hồi vật phẩm...") task.spawn(function() local n = removeAllBuildings() setStatus("đã thu hồi tất cả vật phẩm") end) end)
 end
 
 -- PETS
 do
-    local p = addTab("Pets", "solar:bone-bold")
+    local p = addTab("Thú Cưng", "solar:bone-bold")
     local L, R = twoCol(p)
-    colTitle(L, "Wild Animals"); subTitle(L, "Auto Tame")
-    howItWorks(L, "Sits on wild animals and tames them. Pick which species to chase, or leave empty to tame every wild animal that spawns.")
-    toggleRow(L, "Auto Tame Wild Animals", "Tame selected species automatically.", "autoTame")
-    dropdownRow(L, "Animals To Tame", "Empty = tame everything.", getAnimalOptions, S.tameAnimals, nil, nil)
+    colTitle(L, "Thu Phục"); subTitle(L, "Tự Động Thu Phục")
+    howItWorks(L, "Tự động bay đến cưỡi và thuần hóa thú cưng hoang dã. Chọn loài cụ thể bạn muốn bắt, hoặc để trống để bắt mọi con thú xuất hiện.")
+    toggleRow(L, "Tự Động Thu Phục Thú Hoang", "Tự động thu phục các loài thú cưng đã chọn.", "autoTame")
+    dropdownRow(L, "Thú Cưng Cần Thu Phục", "Để trống = bắt tất cả.", getAnimalOptions, S.tameAnimals, nil, nil)
 
-    colTitle(R, "Your Pets"); subTitle(R, "Auto Equip")
-    howItWorks(R, "Keeps your chosen pets equipped. You can pick up to your equip slot count - the picker shows 1/3, 2/3, then MAX in red.")
-    toggleRow(R, "Auto Equip Pets", "Keeps the selected pets equipped.", "autoEquipPets")
-    dropdownRow(R, "Pets To Equip", "Pick up to your slot count.", getPetOptions, S.equipPets, nil, maxEquip)
-    actionRow(R, "Equip Now", "Equip the selected pets immediately.", function()
+    colTitle(R, "Đeo Thú Cưng"); subTitle(R, "Tự Động Đeo Thú Cưng")
+    howItWorks(R, "Tự động đeo các thú cưng bạn đã chọn. Số lượng tối đa phụ thuộc vào số ô thú cưng của bạn (bộ lọc hiển thị 1/3, 2/3, hoặc báo Đầy bằng màu đỏ).")
+    toggleRow(R, "Tự Động Đeo Thú Cưng", "Luôn giữ cho thú cưng đã chọn được trang bị.", "autoEquipPets")
+    dropdownRow(R, "Thú Cưng Cần Đeo", "Chọn số lượng thú cưng trong giới hạn của bạn.", getPetOptions, S.equipPets, nil, maxEquip)
+    actionRow(R, "Đeo Thú Cưng Ngay", "Đeo toàn bộ thú cưng đã chọn ngay lập tức.", function()
         local n, mx = 0, maxEquip()
         for name in pairs(S.equipPets) do if n >= mx then break end fire(Net.Pets.RequestEquipByName, tostring(name)) n = n + 1 task.wait(0.12) end
-        setStatus("equipped " .. n .. " pets")
+        setStatus("đã đeo " .. n .. " thú cưng")
     end)
 end
 
-addGroup("Tools")
+addGroup("Công Cụ")
 
 -- STATS
 do
-    local p = addTab("Stats", "solar:graph-new-bold")
+    local p = addTab("Thống Kê", "solar:graph-new-bold")
     local L, R = twoCol(p)
-    subTitle(L, "Profit Tracker")
-    local sMin = statRow(L, "Per Minute", C.green)
-    local sHr = statRow(L, "Per Hour", C.green)
-    local sSess = statRow(L, "Session Earned", C.green)
-    subTitle(R, "Inventory")
-    local sInv = statRow(R, "Backpack Value", C.green)
-    local sCnt = statRow(R, "Fruit Count")
-    local sBest = statRow(R, "Best Crop To Plant")
-    actionRow(R, "Rescan Inventory", "Recalculate backpack worth now.", function() local v, n = inventoryValue() setStatus("inventory worth " .. money(v) .. " (" .. n .. " fruit)") end)
+    subTitle(L, "Theo Dõi Lợi Nhuận")
+    local sMin = statRow(L, "Mỗi Phút", C.green)
+    local sHr = statRow(L, "Mỗi Giờ", C.green)
+    local sSess = statRow(L, "Trong Phiên Này", C.green)
+    subTitle(R, "Kho Balo")
+    local sInv = statRow(R, "Giá Trị Balo", C.green)
+    local sCnt = statRow(R, "Số Lượng Trái Cây")
+    local sBest = statRow(R, "Cây Tốt Nhất Để Gieo")
+    actionRow(R, "Quét Lại Balo", "Tính toán lại giá trị balo của bạn ngay.", function() local v, n = inventoryValue() setStatus("balo trị giá " .. money(v) .. " (" .. n .. " quả)") end)
     spawnLoop(1, function()
         if not Window.Visible then return end
         sMin.Text = money(Profit.perMin); sHr.Text = money(Profit.perHr); sSess.Text = money(Profit.session)
@@ -1745,85 +1762,85 @@ end
 
 -- TELEPORT
 do
-    local p = addTab("Teleport", "solar:map-point-bold")
+    local p = addTab("Dịch Chuyển", "solar:map-point-bold")
     local L, R = twoCol(p)
-    colTitle(L, "Shops & NPCs"); subTitle(L, "Quick Travel")
+    colTitle(L, "Cửa Hàng & NPC"); subTitle(L, "Di Chuyển Nhanh")
     local function tpBtn(parent, label, pad)
-        actionRow(parent, label, "Travel to the " .. label .. ".", function()
+        actionRow(parent, label, "Dịch chuyển tới " .. label .. ".", function()
             local t = Workspace:FindFirstChild("Teleports"); local d = t and t:FindFirstChild(pad)
-            if d and d:IsA("BasePart") then reach(d.Position); setStatus("teleported to " .. label) else setStatus(label .. " not found") end
+            if d and d:IsA("BasePart") then reach(d.Position); setStatus("đã dịch chuyển tới " .. label) else setStatus(label .. " không tìm thấy") end
         end, "GO")
     end
-    tpBtn(L, "Seed Shop", "Seeds"); tpBtn(L, "Gear Shop", "Gears"); tpBtn(L, "Sell NPC", "Sell"); tpBtn(L, "Props Shop", "Props")
-    colTitle(R, "Garden"); subTitle(R, "Home")
-    actionRow(R, "My Garden", "Return to your own plot.", function() local plot = myPlot() local sp = plot and plot:FindFirstChild("SpawnPoint") if sp then reach(sp.Position) end setStatus("teleported home") end, "GO")
+    tpBtn(L, "Cửa Hàng Hạt Giống", "Seeds"); tpBtn(L, "Cửa Hàng Trang Bị", "Gears"); tpBtn(L, "NPC Bán Đồ", "Sell"); tpBtn(L, "Cửa Hàng Đồ Trí", "Props")
+    colTitle(R, "Khu Vườn"); subTitle(R, "Về Nhà")
+    actionRow(R, "Vườn Của Tôi", "Dịch chuyển về đất ruộng của bạn.", function() local plot = myPlot() local sp = plot and plot:FindFirstChild("SpawnPoint") if sp then reach(sp.Position) end setStatus("đã về nhà") end, "GO")
 end
 
 -- VISUAL
 do
-    local p = addTab("Visual", "solar:eye-bold")
+    local p = addTab("Hiển Thị", "solar:eye-bold")
     local L = oneCol(p)
-    colTitle(L, "ESP & Alerts"); subTitle(L, "Visual")
-    howItWorks(L, "Outlines crops on screen and pings you about rare stock. Mutated-fruit ESP is distance-capped so it stays light.")
-    toggleRow(L, "Highlight Ready Crops", "Outlines your own ripe crops in ruby.", "highlightReady")
-    toggleRow(L, "Highlight Mutated Fruit", "Outlines nearby gold/mutated fruit in gold.", "highlightRare")
-    toggleRow(L, "Rare Seed Restock Alert", "Notifies when a pricey seed hits the shop.", "rareNotify")
+    colTitle(L, "ESP & Cảnh Báo"); subTitle(L, "Visual")
+    howItWorks(L, "Tạo viền sáng quanh cây trồng trên màn hình và cảnh báo khi shop có hạt hiếm. Bộ lọc ESP cây đột biến được giới hạn khoảng cách để tránh giật lag.")
+    toggleRow(L, "Viền Cây Trồng Đã Chín", "Tạo viền đỏ quanh cây trồng đã chín nhà bạn.", "highlightReady")
+    toggleRow(L, "Viền Quả Đột Biến", "Tạo viền vàng quanh quả đột biến/vàng ở gần.", "highlightRare")
+    toggleRow(L, "Cảnh Báo Hồi Hạt Hiếm", "Gửi thông báo khi hạt giống đắt tiền xuất hiện trong shop.", "rareNotify")
 end
 
-addGroup("Player")
+addGroup("Người Chơi")
 
 do
-    local p = addTab("Player", "solar:walking-bold")
+    local p = addTab("Người Chơi", "solar:walking-bold")
     local L, R = twoCol(p)
-    subTitle(L, "Movement")
-    howItWorks(L, "The game snaps you back if you move too fast, so keep speeds moderate. The hub also paces its teleports in safe hops.")
-    sliderRow(L, "Walk Speed", 16, 120, S.walkSpeed, 0, function(v) S.walkSpeed = v end)
-    sliderRow(L, "Jump Power", 50, 250, S.jumpPower, 0, function(v) S.jumpPower = v end)
-    toggleRow(L, "Infinite Jump", "Jump again any time mid-air.", "infJump")
-    toggleRow(L, "Noclip", "Walk through walls and fences.", "noclip", function(v) if not v then local c = char() if c then for _, pp in ipairs(c:GetDescendants()) do if pp:IsA("BasePart") then pp.CanCollide = true end end end end end)
-    subTitle(R, "Fly")
-    toggleRow(R, "Fly", "Free-fly with W/A/S/D, Space up, Ctrl down.", "fly", function(v) if not v and Hub.stopFly then Hub.stopFly() end end)
-    sliderRow(R, "Fly Speed", 20, 150, S.flySpeed, 0, function(v) S.flySpeed = v end)
-    subTitle(R, "Teleport")
-    actionRow(R, "Go To My Garden", "Hop back to your own plot.", function() local plot = myPlot() local sp = plot and plot:FindFirstChild("SpawnPoint") if sp then reach(sp.Position) end setStatus("teleported") end)
+    subTitle(L, "Tốc Độ & Di Chuyển")
+    howItWorks(L, "Game sẽ giới hạn tốc độ di chuyển của bạn, vì vậy hãy giữ tốc độ ở mức vừa phải. Hack di chuyển cũng được thực hiện qua các bước nhảy an toàn.")
+    sliderRow(L, "Tốc Độ Đi Bộ", 16, 120, S.walkSpeed, 0, function(v) S.walkSpeed = v end)
+    sliderRow(L, "Lực Nhảy", 50, 250, S.jumpPower, 0, function(v) S.jumpPower = v end)
+    toggleRow(L, "Nhảy Vô Hạn", "Nhảy nhiều lần trên không trung.", "infJump")
+    toggleRow(L, "Đi Xuyên Tường", "Đi xuyên qua tường và hàng rào.", "noclip", function(v) if not v then local c = char() if c then for _, pp in ipairs(c:GetDescendants()) do if pp:IsA("BasePart") then pp.CanCollide = true end end end end end)
+    subTitle(R, "Bay Lượn")
+    toggleRow(R, "Chế Độ Bay", "Tự do bay lượn bằng phím W/A/S/D, Space để bay lên, Ctrl để hạ xuống.", "fly", function(v) if not v and Hub.stopFly then Hub.stopFly() end end)
+    sliderRow(R, "Tốc Độ Bay", 20, 150, S.flySpeed, 0, function(v) S.flySpeed = v end)
+    subTitle(R, "Dịch Chuyển Nhanh")
+    actionRow(R, "Về Vườn Nhà", "Dịch chuyển tức thời về plot ruộng của bạn.", function() local plot = myPlot() local sp = plot and plot:FindFirstChild("SpawnPoint") if sp then reach(sp.Position) end setStatus("đã dịch chuyển") end)
 end
 
-addGroup("Misc")
+addGroup("Tiện Ích Khác")
 
 do
-    local p = addTab("Misc", "solar:settings-bold")
+    local p = addTab("Tiện Ích", "solar:settings-bold")
     local L = oneCol(p)
-    colTitle(L, "Utility"); subTitle(L, "Auto Progress")
-    howItWorks(L, "Hands-off progression: harvests your crops, sells them, buys the best seeds you can afford, plants them across the whole garden, and tames valuable pets (Raccoon, Dragonfly...) when they spawn. Leave it on and your coins + pets snowball.")
-    toggleRow(L, "Auto Progress", "Farm, sell, reinvest and tame - automatically.", "autoProgress")
-    subTitle(L, "Performance")
-    toggleRow(L, "Optimize", "Flat textures, grey sky, no effects - big FPS boost.", "optimize", setOptimize)
-    subTitle(L, "Session")
-    toggleRow(L, "Anti-AFK", "Prevents the 20-minute idle kick.", "antiAfk")
-    actionRow(L, "Rejoin Server", "Teleport into the same place again.", function() pcall(function() game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer) end) end)
-    actionRow(L, "Server Hop", "Request a fresh server.", function() pcall(function() Net.AntiAfk.RequestHop:Fire() end) setStatus("requesting new server") end)
-    subTitle(L, "Info")
+    colTitle(L, "Tiện Ích"); subTitle(L, "Tự Động Vận Hành Lũy Kế")
+    howItWorks(L, "Tính năng auto tự vận hành: tự thu hoạch quả -> tự bán -> tự dùng tiền mua hạt giống tốt nhất -> tự gieo hạt phủ kín ruộng -> tự bắt thú cưng giá trị cao (Raccoon, Dragonfly...) khi xuất hiện. Giúp tiền và thú cưng của bạn tự sinh sôi.")
+    toggleRow(L, "Tự Động Vận Hành Lũy Kế", "Tự thu hoạch, bán đồ, tái đầu tư và bắt thú hoang - hoàn toàn tự động.", "autoProgress")
+    subTitle(L, "Tối Ưu Hiệu Năng")
+    toggleRow(L, "Tối Ưu Hóa (FPS)", "Làm phẳng vật thể, bầu trời xám, tắt hiệu ứng - tăng mạnh FPS.", "optimize", setOptimize)
+    subTitle(L, "Phiên Kết Nối")
+    toggleRow(L, "Chống Treo Máy (AFK)", "Tránh việc bị ngắt kết nối khi treo máy quá 20 phút.", "antiAfk")
+    actionRow(L, "Vào Lại Server", "Kết nối lại vào chính server hiện tại.", function() pcall(function() game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer) end) end)
+    actionRow(L, "Chuyển Server", "Yêu cầu chuyển sang một server khác.", function() pcall(function() Net.AntiAfk.RequestHop:Fire() end) setStatus("đang yêu cầu chuyển server") end)
+    subTitle(L, "Thông Tin")
     p:Paragraph({
-        Title = "Info",
-        Desc = "Right Shift toggles the menu. The X fully unloads everything.\nUserId " .. LocalPlayer.UserId .. "   -   Plot " .. (myPlot() and myPlot().Name or "?")
+        Title = "Thông Tin",
+        Desc = "Bấm phím Right Shift để ẩn/hiện menu. Bấm nút Gỡ Bỏ Script để tắt hoàn toàn.\nUserId " .. LocalPlayer.UserId .. "   -   Plot " .. (myPlot() and myPlot().Name or "?")
     })
-    actionRow(L, "Unload Hub", "Stop everything and close.", function() Hub.unload() end)
+    actionRow(L, "Gỡ Bỏ Script", "Ngừng toàn bộ hoạt động của hack và đóng menu.", function() Hub.unload() end)
 end
 
 -- SERVER
 do
-    local p = addTab("Server", "solar:server-bold")
+    local p = addTab("Server & Webhook", "solar:server-bold")
     local L, R = twoCol(p)
-    subTitle(L, "Server Hop")
-    howItWorks(L, "Jump to other servers - handy for finding rare seed stock or fresh events. Low-pop finds the emptiest server.")
-    actionRow(L, "Server Hop", "Teleport to a different server.", function() serverHop(false) end)
-    actionRow(L, "Low-Pop Hop", "Teleport to the emptiest server.", function() serverHop(true) end)
-    toggleRow(L, "Auto-Hop Until Rare Seed", "Keeps hopping until a 5K+ seed is in stock.", "autoHopRare")
-    subTitle(R, "Webhook")
-    howItWorks(R, "Paste a Discord webhook URL to get pinged about events. Toggle which events to send.")
-    inputRow(R, "Webhook URL", "Discord webhook to post to.", S.webhookUrl, "https://discord.com/api/webhooks/...", function(t) S.webhookUrl = t end)
-    toggleRow(R, "Notify: Rare Seed In Stock", "Posts when a 5K+ seed restocks.", "whRareSeed")
-    actionRow(R, "Send Test Message", "Post a test message to your webhook.", function() if sendWebhook("Test from 360's GAG - webhook is working!") then setStatus("test sent") else setStatus("set a webhook URL first") end end)
+    subTitle(L, "Chuyển Server")
+    howItWorks(L, "Dịch chuyển sang server công khai khác - rất hữu ích khi săn hạt hiếm hoặc đợi sự kiện mới. Low-Pop sẽ tìm các server có ít người nhất.")
+    actionRow(L, "Chuyển Server Công Khai", "Dịch chuyển sang một server ngẫu nhiên.", function() serverHop(false) end)
+    actionRow(L, "Đến Server Ít Người", "Tìm và dịch chuyển tới server vắng nhất.", function() serverHop(true) end)
+    toggleRow(L, "Tự Động Săn Hạt Hiếm", "Liên tục chuyển server cho đến khi shop bán hạt giá 5K+.", "autoHopRare")
+    subTitle(R, "Gửi Tin Discord Webhook")
+    howItWorks(R, "Dán địa chỉ Discord Webhook để nhận thông báo tự động về điện thoại/máy tính khi có sự kiện. Bật tắt các sự kiện bên dưới.")
+    inputRow(R, "Địa Chỉ Webhook", "Dán Discord webhook để nhận thông tin.", S.webhookUrl, "https://discord.com/api/webhooks/...", function(t) S.webhookUrl = t end)
+    toggleRow(R, "Báo Khi Có Hạt Hiếm Hồi Hàng", "Gửi tin nhắn khi hạt giống đắt tiền (5K+) xuất hiện.", "whRareSeed")
+    actionRow(R, "Gửi Tin Nhắn Thử", "Post a test message to your webhook.", function() if sendWebhook("Tin nhắn thử nghiệm từ Khoa Dev > Grow a Garden 2 - Webhook hoạt động tốt!") then setStatus("đã gửi tin thử") else setStatus("hãy dán địa chỉ Webhook trước") end end)
 end
 
 --========================== INIT ==================================--
@@ -1837,7 +1854,7 @@ spawnLoop(3.5, function()
     end
 end)
 
-notify("Loaded successfully - press Right Shift to toggle the menu.", "360's GAG", C.accent)
-setStatus("loaded - Right Shift to toggle")
-print("[360's GAG] loaded.")
+notify("Đã tải thành công - Nhấn phím Right Shift hoặc nút bấm trên màn hình để ẩn/hiện menu.", "Khoa Dev > Grow a Garden 2", C.accent)
+setStatus("đã tải thành công - Nhấp Right Shift để ẩn/hiện")
+print("[Khoa Dev > Grow a Garden 2] đã tải thành công.")
 
