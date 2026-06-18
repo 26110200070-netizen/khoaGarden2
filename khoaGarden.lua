@@ -16,6 +16,26 @@ local CollectionService= game:GetService("CollectionService")
 local Workspace        = game:GetService("Workspace")
 local LocalPlayer      = Players.LocalPlayer
 
+local cloneref = (cloneref or clonereference or function(instance)
+	return instance
+end)
+local WindUI
+do
+	local ok, result = pcall(function()
+		return require("./src/Init")
+	end)
+	if ok then
+		WindUI = result
+	else
+		if cloneref(game:GetService("RunService")):IsStudio() then
+			WindUI = require(cloneref(game:GetService("ReplicatedStorage"):WaitForChild("WindUI"):WaitForChild("Init")))
+		else
+			WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+		end
+	end
+end
+
+
 --========================== GAME API ==============================--
 local Net = (function() local ok,m = pcall(function() return require(ReplicatedStorage.SharedModules.Networking) end) return ok and m or nil end)()
 local PSC = (function() local ok,m = pcall(function() return require(ReplicatedStorage.ClientModules.PlayerStateClient) end) return ok and m or nil end)()
@@ -323,14 +343,13 @@ local function restockIn(shop)
     return nx and math.max(0, nx.Value - os.time()) or nil
 end
 
---====================== GUI THEME (RUBY) ==========================--
+----====================== WIND UI SYSTEM ==========================--
 local C = {
-    bg     = Color3.fromRGB(17,17,20),  panel  = Color3.fromRGB(23,23,27),  card  = Color3.fromRGB(29,29,34),
-    cardHi = Color3.fromRGB(36,36,42),  inset  = Color3.fromRGB(15,15,18),  stroke= Color3.fromRGB(46,46,53),
-    white  = Color3.fromRGB(240,240,245), text = Color3.fromRGB(223,223,229), sub  = Color3.fromRGB(138,138,148),
-    head   = Color3.fromRGB(120,120,130),
-    accent = Color3.fromRGB(196,30,58),  accentDim = Color3.fromRGB(120,22,40),  accentText = Color3.fromRGB(232,96,114),
-    green = Color3.fromRGB(80,220,130),  count = Color3.fromRGB(150,150,160),  rowOn = Color3.fromRGB(96,22,40),
+    accent = Color3.fromRGB(196,30,58),
+    green = Color3.fromRGB(80,220,130),
+    text = Color3.fromRGB(223,223,229),
+    sub = Color3.fromRGB(138,138,148),
+    white = Color3.fromRGB(240,240,245)
 }
 -- number / money formatting
 local function commafy(n)
@@ -351,482 +370,345 @@ local function fmtPrice(n)
     return s .. "\xc2\xa2"
 end
 local function seedPriceTag(nm) return fmtPrice(SeedPrice[nm]) end
-local FB, FM, FR = Enum.Font.GothamBold, Enum.Font.GothamMedium, Enum.Font.Gotham
-local function corner(i, r) local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0, r or 8) c.Parent = i return c end
-local function stroke(i, col, t) local s = Instance.new("UIStroke") s.Color = col or C.stroke s.Thickness = t or 1 s.Parent = i return s end
-local function padAll(i, l,r,t,b) local u = Instance.new("UIPadding") u.PaddingLeft = UDim.new(0,l) u.PaddingRight = UDim.new(0,r or l) u.PaddingTop = UDim.new(0,t or l) u.PaddingBottom = UDim.new(0,b or t or l) u.Parent = i return u end
-local function vlist(i, p) local l = Instance.new("UIListLayout") l.Padding = UDim.new(0,p or 8) l.SortOrder = Enum.SortOrder.LayoutOrder l.Parent = i return l end
-local function nextOrder(p) local n = (p:GetAttribute("_o") or 0) + 1 p:SetAttribute("_o", n) return n end
 
 local function guiParent()
     local p; pcall(function() p = gethui and gethui() end)
     if not p then pcall(function() p = game:GetService("CoreGui") end) end
     return p or LocalPlayer:WaitForChild("PlayerGui")
 end
-pcall(function() local old = guiParent():FindFirstChild("GAG360") if old then old:Destroy() end end)
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "GAG360"; ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling; ScreenGui.IgnoreGuiInset = true
-if syn and syn.protect_gui then pcall(syn.protect_gui, ScreenGui) end
-ScreenGui.Parent = guiParent()
-
-local Main = Instance.new("Frame")
-Main.Name = "Main"; Main.AnchorPoint = Vector2.new(0.5, 0.5); Main.Size = UDim2.fromOffset(1020, 700)
-Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-Main.BackgroundColor3 = C.bg; Main.BorderSizePixel = 0; Main.Parent = ScreenGui
-corner(Main, 12); stroke(Main, C.stroke, 1)
-local UIScale = Instance.new("UIScale"); UIScale.Scale = 1; UIScale.Parent = Main
-do
-    local sh = Instance.new("ImageLabel"); sh.BackgroundTransparency = 1; sh.Image = "rbxassetid://6014261993"
-    sh.ImageColor3 = Color3.new(0,0,0); sh.ImageTransparency = 0.35; sh.ScaleType = Enum.ScaleType.Slice
-    sh.SliceCenter = Rect.new(49,49,450,450); sh.Size = UDim2.new(1,46,1,46); sh.Position = UDim2.new(0,-23,0,-23); sh.ZIndex = 0; sh.Parent = Main
-end
-
--- title bar
-local Top = Instance.new("Frame"); Top.Size = UDim2.new(1,0,0,42); Top.BackgroundTransparency = 1; Top.Parent = Main
-do  -- ruby gem logo
-    local gem = Instance.new("Frame"); gem.AnchorPoint = Vector2.new(0.5,0.5); gem.Position = UDim2.fromOffset(26,21)
-    gem.Size = UDim2.fromOffset(15,15); gem.BackgroundColor3 = C.accent; gem.Rotation = 45; gem.Parent = Top; corner(gem,4)
-    local hi = Instance.new("Frame"); hi.AnchorPoint = Vector2.new(0.5,0); hi.Position = UDim2.new(0.5,0,0,2.5)
-    hi.Size = UDim2.fromOffset(8,3.5); hi.BackgroundColor3 = Color3.fromRGB(245,150,160); hi.BackgroundTransparency = 0.1; hi.Parent = gem; corner(hi,2)
-end
-local Title = Instance.new("TextLabel"); Title.BackgroundTransparency = 1; Title.Position = UDim2.fromOffset(44,7)
-Title.Size = UDim2.fromOffset(300,16); Title.Font = FB; Title.Text = "360's GAG"; Title.TextSize = 15; Title.TextColor3 = C.white
-Title.TextXAlignment = Enum.TextXAlignment.Left; Title.Parent = Top
-local Sub = Instance.new("TextLabel"); Sub.BackgroundTransparency = 1; Sub.Position = UDim2.fromOffset(44,23)
-Sub.Size = UDim2.fromOffset(300,12); Sub.Font = FR; Sub.Text = "Grow a Garden 2"; Sub.TextSize = 10; Sub.TextColor3 = C.sub
-Sub.TextXAlignment = Enum.TextXAlignment.Left; Sub.Parent = Top
-
-local function winBtn(xoff)
-    local b = Instance.new("TextButton"); b.AnchorPoint = Vector2.new(1,0.5); b.Position = UDim2.new(1, xoff, 0, 21)
-    b.Size = UDim2.fromOffset(24,24); b.BackgroundColor3 = C.card; b.Text = ""; b.AutoButtonColor = true; b.Parent = Top
-    corner(b,7); return b
-end
-local CloseBtn = winBtn(-12)
-local MaxBtn   = winBtn(-42)
-local MinBtn   = winBtn(-72)
-CloseBtn.BackgroundColor3 = C.accentDim
-track(CloseBtn.MouseEnter:Connect(function() TweenService:Create(CloseBtn, TweenInfo.new(0.12), { BackgroundColor3 = C.accent }):Play() end))
-track(CloseBtn.MouseLeave:Connect(function() TweenService:Create(CloseBtn, TweenInfo.new(0.12), { BackgroundColor3 = C.accentDim }):Play() end))
-for _, rot in ipairs({45,-45}) do
-    local bar = Instance.new("Frame"); bar.AnchorPoint = Vector2.new(0.5,0.5); bar.Position = UDim2.fromScale(0.5,0.5)
-    bar.Size = UDim2.fromOffset(12,2.5); bar.BackgroundColor3 = C.white; bar.BorderSizePixel = 0; bar.Rotation = rot; bar.Parent = CloseBtn; corner(bar,2)
-end
-local MinPlusBar
-do
-    local sq = Instance.new("Frame"); sq.AnchorPoint = Vector2.new(0.5,0.5); sq.Position = UDim2.fromScale(0.5,0.5)
-    sq.Size = UDim2.fromOffset(10,10); sq.BackgroundTransparency = 1; sq.Parent = MaxBtn; corner(sq,2); stroke(sq, C.text, 1.5)
-    -- minimize glyph: horizontal bar ("-"); a hidden vertical bar makes it a "+" when minimized
-    local mb = Instance.new("Frame"); mb.AnchorPoint = Vector2.new(0.5,0.5); mb.Position = UDim2.fromScale(0.5,0.5)
-    mb.Size = UDim2.fromOffset(10,2); mb.BackgroundColor3 = C.text; mb.BorderSizePixel = 0; mb.Parent = MinBtn; corner(mb,1)
-    MinPlusBar = Instance.new("Frame"); MinPlusBar.AnchorPoint = Vector2.new(0.5,0.5); MinPlusBar.Position = UDim2.fromScale(0.5,0.5)
-    MinPlusBar.Size = UDim2.fromOffset(2,10); MinPlusBar.BackgroundColor3 = C.text; MinPlusBar.BorderSizePixel = 0; MinPlusBar.Visible = false; MinPlusBar.Parent = MinBtn; corner(MinPlusBar,1)
-end
--- body
-local Body = Instance.new("Frame"); Body.Name = "Body"; Body.Position = UDim2.fromOffset(0,42)
-Body.Size = UDim2.new(1,0,1,-42); Body.BackgroundTransparency = 1; Body.Parent = Main
-
-local Sidebar = Instance.new("Frame"); Sidebar.Name = "Sidebar"; Sidebar.Position = UDim2.fromOffset(12,0)
-Sidebar.Size = UDim2.new(0,176,1,-12); Sidebar.BackgroundColor3 = C.panel; Sidebar.Parent = Body
-corner(Sidebar,10); stroke(Sidebar, C.stroke,1)
-local SideList = Instance.new("ScrollingFrame"); SideList.BackgroundTransparency = 1; SideList.BorderSizePixel = 0; SideList.Size = UDim2.new(1,0,1,-64); SideList.Parent = Sidebar
-SideList.ScrollBarThickness = 3; SideList.ScrollBarImageColor3 = C.stroke; SideList.CanvasSize = UDim2.new(0,0,0,0); SideList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-vlist(SideList, 3); padAll(SideList, 8, 8, 8, 6)
--- profile (pinned bottom)
-do
-    local pf = Instance.new("Frame"); pf.AnchorPoint = Vector2.new(0,1); pf.Position = UDim2.new(0,0,1,-8)
-    pf.Size = UDim2.new(1,0,0,52); pf.BackgroundTransparency = 1; pf.Parent = Sidebar
-    local av = Instance.new("ImageLabel"); av.Position = UDim2.fromOffset(12,9); av.Size = UDim2.fromOffset(34,34)
-    av.BackgroundColor3 = C.card; av.Image = "rbxthumb://type=AvatarHeadShot&id=" .. LocalPlayer.UserId .. "&w=48&h=48"; av.Parent = pf; corner(av,17); stroke(av, C.accent, 1)
-    local nm = Instance.new("TextLabel"); nm.BackgroundTransparency = 1; nm.Position = UDim2.fromOffset(54,11); nm.Size = UDim2.fromOffset(112,16)
-    nm.Font = FB; nm.Text = LocalPlayer.DisplayName; nm.TextSize = 13; nm.TextColor3 = C.white; nm.TextXAlignment = Enum.TextXAlignment.Left; nm.TextTruncate = Enum.TextTruncate.AtEnd; nm.Parent = pf
-    local sub = Instance.new("TextLabel"); sub.BackgroundTransparency = 1; sub.Position = UDim2.fromOffset(54,28); sub.Size = UDim2.fromOffset(112,14)
-    sub.Font = FR; sub.Text = "Grow a Garden 2"; sub.TextSize = 10; sub.TextColor3 = C.sub; sub.TextXAlignment = Enum.TextXAlignment.Left; sub.Parent = pf
-end
-
--- content (header title + scroll)
-local Content = Instance.new("Frame"); Content.Name = "Content"; Content.Position = UDim2.fromOffset(200,0)
-Content.Size = UDim2.new(1,-212,1,-12); Content.BackgroundColor3 = C.panel; Content.Parent = Body
-corner(Content,10); stroke(Content, C.stroke,1)
-local CTitle = Instance.new("TextLabel"); CTitle.BackgroundTransparency = 1; CTitle.Position = UDim2.fromOffset(18,10)
-CTitle.Size = UDim2.new(1,-36,0,20); CTitle.Font = FB; CTitle.Text = "Farm"; CTitle.TextSize = 17; CTitle.TextColor3 = C.white
-CTitle.TextXAlignment = Enum.TextXAlignment.Left; CTitle.Parent = Content
-local Scroll = Instance.new("ScrollingFrame"); Scroll.Position = UDim2.fromOffset(8,36); Scroll.Size = UDim2.new(1,-16,1,-44)
-Scroll.BackgroundTransparency = 1; Scroll.BorderSizePixel = 0; Scroll.ScrollBarThickness = 4; Scroll.ScrollBarImageColor3 = C.stroke
-Scroll.CanvasSize = UDim2.new(0,0,0,0); Scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y; Scroll.Parent = Content
-padAll(Scroll, 10, 10, 4, 10)
-
--- status (bottom strip, left aligned)
-local Status = Instance.new("TextLabel"); Status.AnchorPoint = Vector2.new(0,1); Status.Position = UDim2.new(0,16,1,-1)
-Status.Size = UDim2.fromOffset(560,12); Status.BackgroundTransparency = 1; Status.Font = FR; Status.Text = "ready"; Status.TextSize = 10
-Status.TextColor3 = C.sub; Status.TextXAlignment = Enum.TextXAlignment.Left; Status.Parent = Main
-local function setStatus(t) Status.Text = t end
-
--- cool slide-in toast notifications (top-right, stack downward, auto-dismiss).
--- Parented to the ScreenGui so they show full-size even when the window is hidden.
-local activeToasts = {}
--- the ScreenGui sits inside CoreGui/HiddenUI which is offset (AbsolutePosition.Y ~= 0);
--- compensate so y=0 is the real screen top, otherwise toasts render off-screen.
-local function topInset() return -ScreenGui.AbsolutePosition.Y end
-local function reflowToasts()
-    local base = topInset() + 18; local y = 0
-    for _, c in ipairs(activeToasts) do
-        TweenService:Create(c, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { Position = UDim2.new(1, -18, 0, base + y) }):Play()
-        y = y + c.AbsoluteSize.Y + 8
+local StatusLabel
+local function setStatus(t)
+    if not StatusLabel then
+        local sg = Instance.new("ScreenGui")
+        sg.Name = "GAG360Status"
+        sg.ResetOnSpawn = false
+        if syn and syn.protect_gui then pcall(syn.protect_gui, sg) end
+        sg.Parent = guiParent()
+        
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(0, 340, 0, 26)
+        lbl.Position = UDim2.new(0.5, -170, 1, -40)
+        lbl.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+        lbl.BackgroundTransparency = 0.3
+        lbl.TextColor3 = Color3.fromRGB(240, 240, 240)
+        lbl.Font = Enum.Font.GothamMedium
+        lbl.TextSize = 12
+        lbl.Text = ""
+        lbl.Parent = sg
+        
+        local c = Instance.new("UICorner")
+        c.CornerRadius = UDim.new(0, 8)
+        c.Parent = lbl
+        
+        local s = Instance.new("UIStroke")
+        s.Color = Color3.fromRGB(196, 30, 58)
+        s.Thickness = 1
+        s.Parent = lbl
+        
+        StatusLabel = lbl
     end
+    StatusLabel.Text = "Status: " .. t
 end
-toast = function(title, msg, col)
-    col = col or C.accent
-    local card = Instance.new("Frame"); card.AnchorPoint = Vector2.new(1,0); card.Size = UDim2.fromOffset(300,0); card.AutomaticSize = Enum.AutomaticSize.Y
-    card.BackgroundColor3 = C.card; card.Position = UDim2.new(1, 360, 0, topInset() + 18); card.Parent = ScreenGui
-    corner(card,10); stroke(card, col, 1.5)
-    local pad = Instance.new("UIPadding"); pad.PaddingLeft = UDim.new(0,14); pad.PaddingRight = UDim.new(0,12); pad.PaddingTop = UDim.new(0,10); pad.PaddingBottom = UDim.new(0,10); pad.Parent = card
-    local vl = Instance.new("UIListLayout"); vl.Padding = UDim.new(0,3); vl.SortOrder = Enum.SortOrder.LayoutOrder; vl.Parent = card
-    local hrow = Instance.new("Frame"); hrow.Size = UDim2.new(1,0,0,16); hrow.BackgroundTransparency = 1; hrow.LayoutOrder = 1; hrow.Parent = card
-    local dot = Instance.new("Frame"); dot.AnchorPoint = Vector2.new(0,0.5); dot.Position = UDim2.new(0,1,0.5,0); dot.Size = UDim2.fromOffset(9,9); dot.BackgroundColor3 = col; dot.BorderSizePixel = 0; dot.Parent = hrow; corner(dot,5)
-    local t = Instance.new("TextLabel"); t.BackgroundTransparency = 1; t.Position = UDim2.fromOffset(18,0); t.Size = UDim2.new(1,-18,1,0); t.Font = FB; t.Text = title; t.TextSize = 14; t.TextColor3 = col; t.TextXAlignment = Enum.TextXAlignment.Left; t.Parent = hrow
-    local m = Instance.new("TextLabel"); m.BackgroundTransparency = 1; m.Size = UDim2.new(1,0,0,0); m.AutomaticSize = Enum.AutomaticSize.Y; m.Font = FR; m.Text = msg; m.TextSize = 12.5; m.TextColor3 = C.text; m.TextWrapped = true; m.TextXAlignment = Enum.TextXAlignment.Left; m.LayoutOrder = 2; m.Parent = card
-    table.insert(activeToasts, 1, card)
-    task.defer(reflowToasts)
-    task.delay(4.8, function()
-        if not card.Parent then return end
-        TweenService:Create(card, TweenInfo.new(0.24, Enum.EasingStyle.Quad), { Position = UDim2.new(1, 360, 0, card.Position.Y.Offset) }):Play()
-        task.wait(0.26)
-        for i, c in ipairs(activeToasts) do if c == card then table.remove(activeToasts, i) break end end
-        card:Destroy(); reflowToasts()
+
+local function notify(t, title, col)
+    pcall(function()
+        WindUI:Notify({
+            Title = title or "360's GAG",
+            Content = t,
+            Duration = 5
+        })
     end)
-    return card
+    pcall(function() Net.Notification:Fire("360's GAG", t) end)
 end
 
---========================= TAB SYSTEM =============================--
-local pages, tabButtons, tabBars, tabLabels = {}, {}, {}, {}
-local TI = TweenInfo.new(0.16, Enum.EasingStyle.Quad)
-local function selectTab(name)
-    CTitle.Text = name
-    for n, pg in pairs(pages) do pg.Visible = (n == name) end
-    for n, b in pairs(tabButtons) do
-        local on = (n == name)
-        TweenService:Create(b, TI, { BackgroundColor3 = on and C.card or C.panel }):Play()
-        if tabLabels[n] then TweenService:Create(tabLabels[n], TI, { TextColor3 = on and C.accentText or C.sub }):Play() end
-        if tabBars[n] then
-            TweenService:Create(tabBars[n], TI, { BackgroundTransparency = on and 0 or 1, Size = UDim2.fromOffset(3, on and 14 or 0) }):Play()
-        end
-    end
-end
-local sideOrder = 0
+-- Wind UI Window Setup
+local Window = WindUI:CreateWindow({
+	Title = "360's GAG  |  Grow a Garden 2",
+	Folder = "GAG360",
+	Icon = "solar:leaf-bold-duotone",
+	NewElements = true,
+	HideSearchBar = true,
+	OpenButton = {
+		Title = "Open GAG",
+		CornerRadius = UDim.new(1, 0),
+		StrokeThickness = 3,
+		Enabled = true,
+		Draggable = true,
+		OnlyMobile = false,
+		Scale = 0.5,
+		Color = ColorSequence.new(
+			Color3.fromRGB(196, 30, 58),
+			Color3.fromRGB(120, 22, 40)
+		),
+	},
+})
+Window:SetToggleKey(Enum.KeyCode.RightShift)
+
+local currentSidebarSection = nil
 local function addGroup(title)
-    sideOrder = sideOrder + 1
-    local h = Instance.new("Frame"); h.Size = UDim2.new(1,0,0,30); h.BackgroundTransparency = 1; h.LayoutOrder = sideOrder; h.Parent = SideList
-    local dot = Instance.new("Frame"); dot.AnchorPoint = Vector2.new(0,0.5); dot.Position = UDim2.new(0,8,0,21); dot.Size = UDim2.fromOffset(5,5); dot.BackgroundColor3 = C.accent; dot.Parent = h; corner(dot,3)
-    local l = Instance.new("TextLabel"); l.Position = UDim2.fromOffset(20,10); l.Size = UDim2.new(1,-26,0,18); l.BackgroundTransparency = 1; l.Font = FB
-    l.Text = string.upper(title); l.TextSize = 12; l.TextColor3 = C.accentText; l.TextXAlignment = Enum.TextXAlignment.Left; l.Parent = h
+    currentSidebarSection = Window:Section({
+        Title = title
+    })
 end
+
+local pages = {}
 local function addTab(name, icon)
-    sideOrder = sideOrder + 1
-    local b = Instance.new("TextButton"); b.Size = UDim2.new(1,0,0,28); b.BackgroundColor3 = C.panel
-    b.Text = ""; b.AutoButtonColor = false; b.LayoutOrder = sideOrder; b.Parent = SideList; corner(b,7)
-    -- active indicator bar at the far left (its own column, never under the label)
-    local bar = Instance.new("Frame"); bar.AnchorPoint = Vector2.new(0,0.5); bar.Position = UDim2.new(0,5,0.5,0)
-    bar.Size = UDim2.fromOffset(3,0); bar.BackgroundColor3 = C.accent; bar.BackgroundTransparency = 1; bar.Parent = b; corner(bar,2)
-    local lbl = Instance.new("TextLabel"); lbl.BackgroundTransparency = 1; lbl.Position = UDim2.fromOffset(16,0); lbl.Size = UDim2.new(1,-22,1,0)
-    lbl.Font = FM; lbl.Text = name; lbl.TextSize = 12.5; lbl.TextColor3 = C.sub; lbl.TextXAlignment = Enum.TextXAlignment.Left; lbl.Parent = b
-    track(b.MouseButton1Click:Connect(function() selectTab(name) end))
-    tabButtons[name] = b; tabBars[name] = bar; tabLabels[name] = lbl
-    -- -20 width: a ScrollingFrame's UIPadding shifts children right but does NOT shrink
-    -- their (1,0) width, so without this the right column overflows the visible area.
-    local page = Instance.new("Frame"); page.Name = name; page.Size = UDim2.new(1,-20,0,0); page.AutomaticSize = Enum.AutomaticSize.Y
-    page.BackgroundTransparency = 1; page.Visible = false; page.Parent = Scroll
-    local row = Instance.new("UIListLayout"); row.FillDirection = Enum.FillDirection.Horizontal; row.Padding = UDim.new(0,14)
-    row.SortOrder = Enum.SortOrder.LayoutOrder; row.HorizontalAlignment = Enum.HorizontalAlignment.Left; row.Parent = page
-    pages[name] = page
+    local tabObj
+    if currentSidebarSection then
+        tabObj = currentSidebarSection:Tab({
+            Title = name,
+            Icon = icon or "solar:folder-2-bold"
+        })
+    else
+        tabObj = Window:Tab({
+            Title = name,
+            Icon = icon or "solar:folder-2-bold"
+        })
+    end
+    pages[name] = tabObj
+    return tabObj
+end
+
+local function twoCol(page)
+    return page, page
+end
+local function oneCol(page)
     return page
 end
--- columns. NOTE: the page row layout adds a 14px gap, so two 0.5 columns must each
--- shed 7px or the right column overflows the page and gets clipped.
-local function column(page, w, off)
-    local col = Instance.new("Frame"); col.Size = UDim2.new(w, off or 0, 0, 0); col.AutomaticSize = Enum.AutomaticSize.Y
-    col.BackgroundTransparency = 1; col.LayoutOrder = nextOrder(page); col.Parent = page
-    vlist(col, 8); return col
+local function colTitle(parent, text)
 end
-local function twoCol(page) return column(page, 0.5, -7), column(page, 0.5, -7) end
-local function oneCol(page) return column(page, 1, 0) end
+local function subTitle(parent, text)
+    return parent:Section({
+        Title = text
+    })
+end
 
---========================= COMPONENTS ============================--
-local function colTitle(_, _) end  -- column titles removed for a tighter layout
-local function subTitle(parent, txt)
-    local l = Instance.new("TextLabel"); l.Size = UDim2.new(1,0,0,16); l.BackgroundTransparency = 1; l.Font = FB
-    l.Text = string.upper(txt); l.TextSize = 11; l.TextColor3 = C.accentText; l.TextXAlignment = Enum.TextXAlignment.Center
-    l.LayoutOrder = nextOrder(parent); l.Parent = parent; return l
-end
-local function card(parent, h)
-    local f = Instance.new("Frame"); f.BackgroundColor3 = C.card; f.Size = UDim2.new(1,0,0,h or 0)
-    if not h then f.AutomaticSize = Enum.AutomaticSize.Y end
-    f.LayoutOrder = nextOrder(parent); f.Parent = parent; corner(f,8); stroke(f, C.stroke,1); return f
-end
-local function textBlock(parent, name, desc, rightPad)
-    local box = Instance.new("Frame"); box.BackgroundTransparency = 1; box.Position = UDim2.fromOffset(0,0)
-    box.Size = UDim2.new(1, -(rightPad or 52), 0, 0); box.AutomaticSize = Enum.AutomaticSize.Y; box.Parent = parent
-    vlist(box, 2)
-    local n = Instance.new("TextLabel"); n.Size = UDim2.new(1,0,0,16); n.BackgroundTransparency = 1; n.Font = FM
-    n.Text = name; n.TextSize = 13; n.TextColor3 = C.text; n.TextXAlignment = Enum.TextXAlignment.Left; n.LayoutOrder = 1; n.Parent = box
-    if desc then
-        local d = Instance.new("TextLabel"); d.Size = UDim2.new(1,0,0,0); d.AutomaticSize = Enum.AutomaticSize.Y; d.BackgroundTransparency = 1
-        d.Font = FR; d.Text = desc; d.TextSize = 11; d.TextColor3 = C.sub; d.TextWrapped = true; d.TextXAlignment = Enum.TextXAlignment.Left; d.LayoutOrder = 2; d.Parent = box
-    end
-    return box
-end
 local function howItWorks(parent, text)
-    local f = card(parent); padAll(f, 12, 12, 10, 11); vlist(f, 4)
-    local t = Instance.new("TextLabel"); t.Size = UDim2.new(1,0,0,14); t.BackgroundTransparency = 1; t.Font = FB
-    t.Text = "How it works"; t.TextSize = 12; t.TextColor3 = C.white; t.TextXAlignment = Enum.TextXAlignment.Left; t.LayoutOrder = 1; t.Parent = f
-    local d = Instance.new("TextLabel"); d.Size = UDim2.new(1,0,0,0); d.AutomaticSize = Enum.AutomaticSize.Y; d.BackgroundTransparency = 1
-    d.Font = FR; d.Text = text; d.TextSize = 11; d.TextColor3 = C.sub; d.TextWrapped = true; d.TextXAlignment = Enum.TextXAlignment.Left; d.LayoutOrder = 2; d.Parent = f
-    return f
+    return parent:Paragraph({
+        Title = "How it works",
+        Desc = text
+    })
 end
+
 local function toggleRow(parent, name, desc, key, cb)
-    local f = card(parent); padAll(f, 12, 12, 10, 10)
-    textBlock(f, name, desc)
-    local sw = Instance.new("TextButton"); sw.AnchorPoint = Vector2.new(1,0); sw.Position = UDim2.new(1,0,0,2); sw.Size = UDim2.fromOffset(28,28)
-    sw.AutoButtonColor = false; sw.Text = ""; sw.BackgroundColor3 = C.inset; sw.Parent = f; corner(sw,7); local sws = stroke(sw, C.stroke,1)
-    -- white checkmark (two connected bars) shown on a green box when on
-    local chk = Instance.new("Frame"); chk.BackgroundTransparency = 1; chk.Size = UDim2.fromScale(1,1); chk.Visible = false; chk.Parent = sw
-    local b1 = Instance.new("Frame"); b1.AnchorPoint = Vector2.new(0.5,0.5); b1.Position = UDim2.new(0.35,0,0.59,0); b1.Size = UDim2.fromOffset(7,3); b1.Rotation = 45; b1.BackgroundColor3 = C.white; b1.BorderSizePixel = 0; b1.Parent = chk; corner(b1,2)
-    local b2 = Instance.new("Frame"); b2.AnchorPoint = Vector2.new(0.5,0.5); b2.Position = UDim2.new(0.57,0,0.50,0); b2.Size = UDim2.fromOffset(14,3); b2.Rotation = -47; b2.BackgroundColor3 = C.white; b2.BorderSizePixel = 0; b2.Parent = chk; corner(b2,2)
-    local function render(v)
-        TweenService:Create(sw, TweenInfo.new(0.12), { BackgroundColor3 = v and C.green or C.inset }):Play()
-        sws.Color = v and C.green or C.stroke; chk.Visible = v
+    local toggle
+    toggle = parent:Toggle({
+        Title = name,
+        Desc = desc,
+        Value = S[key] or false,
+        Callback = function(v)
+            if key then S[key] = v end
+            if cb then pcall(cb, v) end
+            saveSettings()
+        end
+    })
+    if cb and key and S[key] then
+        task.spawn(function() pcall(cb, true) end)
     end
-    local function set(v) if key then S[key] = v end render(v) if cb then cb(v) end saveSettings() end
-    track(sw.MouseButton1Click:Connect(function() set(not (key and S[key])) end))
-    render(key and S[key] or false)
-    -- restore a saved-ON cb-driven effect (e.g. Optimize) without re-saving
-    if cb and key and S[key] then task.spawn(function() cb(true) end) end
-    return set
+    return function(v)
+        if toggle and toggle.Set then toggle:Set(v) end
+    end
 end
+
 local function sliderRow(parent, name, mn, mx, default, decimals, setFn)
-    local f = card(parent); padAll(f, 12, 12, 10, 12); vlist(f, 8)
-    local head = Instance.new("Frame"); head.Size = UDim2.new(1,0,0,18); head.BackgroundTransparency = 1; head.LayoutOrder = 1; head.Parent = f
-    local n = Instance.new("TextLabel"); n.Size = UDim2.new(1,-64,1,0); n.BackgroundTransparency = 1; n.Font = FM; n.Text = name
-    n.TextSize = 13; n.TextColor3 = C.text; n.TextXAlignment = Enum.TextXAlignment.Left; n.Parent = head
-    local box = Instance.new("Frame"); box.AnchorPoint = Vector2.new(1,0.5); box.Position = UDim2.new(1,0,0.5,0); box.Size = UDim2.fromOffset(56,22)
-    box.BackgroundColor3 = C.inset; box.Parent = head; corner(box,6); stroke(box, C.stroke, 1)
-    local val = Instance.new("TextBox"); val.Size = UDim2.new(1,-8,1,0); val.Position = UDim2.fromOffset(4,0); val.BackgroundTransparency = 1; val.Font = FB
-    val.TextSize = 12; val.TextColor3 = C.accentText; val.ClearTextOnFocus = false; val.TextXAlignment = Enum.TextXAlignment.Center; val.Parent = box
-    local track_ = Instance.new("Frame"); track_.Size = UDim2.new(1,0,0,6); track_.BackgroundColor3 = C.inset; track_.LayoutOrder = 2; track_.Parent = f; corner(track_,3)
-    local fill = Instance.new("Frame"); fill.BackgroundColor3 = C.accent; fill.Parent = track_; corner(fill,3)
-    local function fmt(v) if decimals and decimals > 0 then return string.format("%."..decimals.."f", v) else return tostring(math.floor(v)) end end
-    local cur = default
-    local function apply(v)
-        cur = v; fill.Size = UDim2.new((v-mn)/(mx-mn),0,1,0); val.Text = fmt(v); if setFn then setFn(v) end
-    end
-    apply(default)
-    local dragging = false
-    local function upd(px)
-        local rel = math.clamp((px - track_.AbsolutePosition.X)/math.max(1,track_.AbsoluteSize.X), 0, 1)
-        local raw = mn + (mx-mn)*rel
-        local v = (decimals and decimals > 0) and (math.floor(raw*10^decimals + 0.5)/10^decimals) or math.floor(raw + 0.5)
-        apply(v)
-    end
-    track(track_.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true upd(i.Position.X) end end))
-    track(UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 and dragging then dragging = false saveSettings() end end))
-    track(UserInputService.InputChanged:Connect(function(i) if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then upd(i.Position.X) end end))
-    -- typed input: clamp to range, revert if invalid
-    track(val.FocusLost:Connect(function()
-        local num = tonumber((tostring(val.Text):gsub("[^%d%.%-]", "")))
-        if num then apply(math.clamp(num, mn, mx)) else val.Text = fmt(cur) end
-        saveSettings()
-    end))
-    return f
+    local slider
+    slider = parent:Slider({
+        Title = name,
+        Step = decimals and (1 / (10 ^ decimals)) or 1,
+        IsTooltip = true,
+        IsTextbox = true,
+        Value = {
+            Min = mn,
+            Max = mx,
+            Default = default,
+        },
+        Callback = function(v)
+            if setFn then pcall(setFn, v) end
+            saveSettings()
+        end
+    })
+    return slider
 end
+
 local function actionRow(parent, name, desc, cb)
-    local f = card(parent); padAll(f, 12, 12, 10, 10)
-    textBlock(f, name, desc, 50)
-    -- round button (a clean circle, no arrow)
-    local btn = Instance.new("Frame"); btn.AnchorPoint = Vector2.new(1,0.5); btn.Position = UDim2.new(1,0,0.5,0); btn.Size = UDim2.fromOffset(30,30)
-    btn.BackgroundColor3 = C.accentDim; btn.Parent = f; corner(btn,15)
-    local dot = Instance.new("Frame"); dot.AnchorPoint = Vector2.new(0.5,0.5); dot.Position = UDim2.fromScale(0.5,0.5); dot.Size = UDim2.fromOffset(9,9)
-    dot.BackgroundColor3 = C.white; dot.BorderSizePixel = 0; dot.Parent = btn; corner(dot,5)
-    -- the whole card is the click target
-    local cover = Instance.new("TextButton"); cover.Size = UDim2.fromScale(1,1); cover.BackgroundTransparency = 1; cover.Text = ""; cover.AutoButtonColor = false; cover.ZIndex = 4; cover.Parent = f
-    local function hov(on)
-        TweenService:Create(f, TweenInfo.new(0.12), { BackgroundColor3 = on and C.cardHi or C.card }):Play()
-        TweenService:Create(btn, TweenInfo.new(0.12), { BackgroundColor3 = on and C.accent or C.accentDim }):Play()
-    end
-    track(cover.MouseEnter:Connect(function() hov(true) end))
-    track(cover.MouseLeave:Connect(function() hov(false) end))
-    track(cover.MouseButton1Click:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.08), { Size = UDim2.fromOffset(25,25) }):Play()
-        task.delay(0.1, function() TweenService:Create(btn, TweenInfo.new(0.1), { Size = UDim2.fromOffset(30,30) }):Play() end)
-        if cb then task.spawn(cb) end
-    end))
-    return cover
+    return parent:Button({
+        Title = name,
+        Desc = desc,
+        Callback = cb
+    })
 end
--- dropdown row: label+desc + trigger; list expands below as its own card
+
+local dropdownsToRefresh = {}
+
+local function setToList(set)
+    local list = {}
+    for k, v in pairs(set) do
+        if v == true then table.insert(list, k) end
+    end
+    return list
+end
+
+local function listToSet(list, set)
+    table.clear(set)
+    for _, v in ipairs(list) do
+        set[v] = true
+    end
+end
+
+local function cleanName(opt)
+    local idx = string.find(opt, " %- ")
+    if idx then
+        return string.sub(opt, 1, idx - 1)
+    end
+    return opt
+end
+
+local function getFormattedValues(getOptions, priceFn, getStockFn)
+    local opts = getOptions()
+    local formatted = {}
+    for _, opt in ipairs(opts) do
+        local label = opt
+        local price = priceFn and priceFn(opt)
+        local stock = getStockFn and getStockFn(opt)
+        local suffix = {}
+        if price and price ~= "" then table.insert(suffix, price) end
+        if stock and stock > 0 then table.insert(suffix, stock .. "x") end
+        if #suffix > 0 then label = label .. " - " .. table.concat(suffix, ", ") end
+        table.insert(formatted, label)
+    end
+    return formatted
+end
+
 local function dropdownRow(parent, name, desc, getOptions, selectedSet, getStockFn, maxSelectFn, priceFn)
-    local f = card(parent); padAll(f, 12, 12, 10, 10)
-    textBlock(f, name, desc, 152)
-    local trig = Instance.new("TextButton"); trig.AnchorPoint = Vector2.new(1,0); trig.Position = UDim2.new(1,0,0,2); trig.Size = UDim2.fromOffset(138,30)
-    trig.AutoButtonColor = false; trig.BackgroundColor3 = C.inset; trig.Text = ""; trig.Parent = f; corner(trig,8); stroke(trig, C.stroke,1)
-    local tl = Instance.new("TextLabel"); tl.BackgroundTransparency = 1; tl.RichText = true; tl.Position = UDim2.fromOffset(10,0); tl.Size = UDim2.new(1,-26,1,0)
-    tl.Font = FM; tl.TextSize = 11; tl.TextColor3 = C.text; tl.TextXAlignment = Enum.TextXAlignment.Left; tl.TextTruncate = Enum.TextTruncate.AtEnd; tl.Parent = trig
-    local ar = Instance.new("TextLabel"); ar.BackgroundTransparency = 1; ar.AnchorPoint = Vector2.new(1,0.5); ar.Position = UDim2.new(1,-8,0.5,0)
-    ar.Size = UDim2.fromOffset(12,12); ar.Font = FB; ar.Text = "v"; ar.TextSize = 11; ar.TextColor3 = C.sub; ar.Parent = trig
+    local dropdown
+    local function getSelectedList()
+        local list = {}
+        for k, v in pairs(selectedSet) do
+            if v == true then
+                local found = false
+                for _, opt in ipairs(getOptions()) do
+                    if opt == k then
+                        local label = k
+                        local price = priceFn and priceFn(k)
+                        local stock = getStockFn and getStockFn(k)
+                        local suffix = {}
+                        if price and price ~= "" then table.insert(suffix, price) end
+                        if stock and stock > 0 then table.insert(suffix, stock .. "x") end
+                        if #suffix > 0 then label = label .. " - " .. table.concat(suffix, ", ") end
+                        table.insert(list, label)
+                        found = true
+                        break
+                    end
+                end
+                if not found then table.insert(list, k) end
+            end
+        end
+        return list
+    end
 
-    local list = Instance.new("Frame"); list.Size = UDim2.new(1,0,0,0); list.AutomaticSize = Enum.AutomaticSize.Y; list.BackgroundColor3 = C.inset
-    list.Visible = false; list.LayoutOrder = nextOrder(parent); list.Parent = parent; corner(list,8); stroke(list, C.stroke,1)
-    local ll = Instance.new("UIListLayout"); ll.Padding = UDim.new(0,2); ll.SortOrder = Enum.SortOrder.LayoutOrder; ll.Parent = list
-    padAll(list, 6)
+    local updating = false
+    dropdown = parent:Dropdown({
+        Title = name,
+        Desc = desc,
+        Values = getFormattedValues(getOptions, priceFn, getStockFn),
+        Multi = true,
+        Value = getSelectedList(),
+        Callback = function(selected)
+            if updating then return end
+            local maxVal = maxSelectFn and maxSelectFn()
+            if maxVal and #selected > maxVal then
+                updating = true
+                local trimmed = {}
+                for i = 1, maxVal do table.insert(trimmed, selected[i]) end
+                task.spawn(function()
+                    dropdown:Select(trimmed)
+                    updating = false
+                end)
+                selected = trimmed
+            end
+            
+            table.clear(selectedSet)
+            for _, val in ipairs(selected) do
+                selectedSet[cleanName(val)] = true
+            end
+            saveSettings()
+        end
+    })
+    
+    table.insert(dropdownsToRefresh, {
+        element = dropdown,
+        getOptions = getOptions,
+        priceFn = priceFn,
+        getStockFn = getStockFn,
+        getSelectedList = getSelectedList
+    })
+    
+    return {
+        selectAll = function(v)
+            if v then
+                local opts = getOptions()
+                if maxSelectFn then
+                    local mx = maxSelectFn()
+                    local n = 0
+                    table.clear(selectedSet)
+                    for _, opt in ipairs(opts) do
+                        if n >= mx then break end
+                        selectedSet[opt] = true
+                        n = n + 1
+                    end
+                else
+                    for _, opt in ipairs(opts) do
+                        selectedSet[opt] = true
+                    end
+                end
+            else
+                table.clear(selectedSet)
+            end
+            saveSettings()
+            pcall(function()
+                dropdown:Select(getSelectedList())
+            end)
+        end
+    }
+end
 
-    local function count() local n = 0 for _ in pairs(selectedSet) do n = n + 1 end return n end
-    local function updateTrig()
-        local n = count()
-        if maxSelectFn then
-            local mx = maxSelectFn()
-            tl.Text = (n >= mx) and '<font color="rgb(232,96,114)">MAX</font>' or (n == 0 and ("0/"..mx) or (n.."/"..mx))
-        elseif n == 0 then
-            tl.Text = "Any"
-        else
-            local names = {}; for k in pairs(selectedSet) do names[#names + 1] = k end; table.sort(names)
-            tl.Text = table.concat(names, ", ")
-        end
-    end
-    -- "Select All / Clear" pill pinned to the top of the open list
-    local selAll = Instance.new("TextButton"); selAll.Size = UDim2.new(1,0,0,28); selAll.BackgroundColor3 = C.inset; selAll.AutoButtonColor = false
-    selAll.Font = FB; selAll.TextSize = 11; selAll.TextColor3 = C.accentText; selAll.Text = "SELECT ALL"; selAll.LayoutOrder = -1; selAll.Parent = list; corner(selAll,7); stroke(selAll, C.stroke,1)
-    local rowRefs = {}
-    local function makeRow(nm, order)
-        local r = Instance.new("TextButton"); r.Size = UDim2.new(1,0,0,30); r.BackgroundColor3 = C.card; r.Text = ""; r.AutoButtonColor = false
-        r.LayoutOrder = order; r.Parent = list; corner(r,8)
-        local lbl = Instance.new("TextLabel"); lbl.BackgroundTransparency = 1; lbl.RichText = true; lbl.Position = UDim2.fromOffset(12,0)
-        lbl.Size = UDim2.new(1, getStockFn and -64 or -22, 1, 0); lbl.Font = FM; lbl.TextSize = 12; lbl.TextColor3 = C.text
-        lbl.TextXAlignment = Enum.TextXAlignment.Left; lbl.TextTruncate = Enum.TextTruncate.AtEnd; lbl.Parent = r
-        local st
-        if getStockFn then st = Instance.new("TextLabel"); st.BackgroundTransparency = 1; st.AnchorPoint = Vector2.new(1,0.5); st.Position = UDim2.new(1,-12,0.5,0); st.Size = UDim2.fromOffset(48,16); st.Font = FB; st.TextSize = 11; st.TextColor3 = C.sub; st.TextXAlignment = Enum.TextXAlignment.Right; st.Parent = r end
-        local function label(on)
-            local t = nm
-            if priceFn then local p = priceFn(nm); if p and p ~= "" then t = t .. '  <font color="rgb('..(on and "255,205,222" or "120,220,150")..')">' .. p .. '</font>' end end
-            return t
-        end
-        local function paint()
-            local on = selectedSet[nm] == true
-            TweenService:Create(r, TweenInfo.new(0.12), { BackgroundColor3 = on and C.rowOn or C.card }):Play()
-            lbl.TextColor3 = on and C.white or C.text; lbl.Text = label(on)
-        end
-        paint()
-        track(r.MouseEnter:Connect(function() if not selectedSet[nm] then TweenService:Create(r, TweenInfo.new(0.1), { BackgroundColor3 = C.cardHi }):Play() end end))
-        track(r.MouseLeave:Connect(function() if not selectedSet[nm] then TweenService:Create(r, TweenInfo.new(0.1), { BackgroundColor3 = C.card }):Play() end end))
-        track(r.MouseButton1Click:Connect(function()
-            if selectedSet[nm] then selectedSet[nm] = nil
-            elseif (not maxSelectFn) or count() < maxSelectFn() then selectedSet[nm] = true end
-            paint(); updateTrig(); saveSettings()
-        end))
-        rowRefs[nm] = { st = st, paint = paint }
-    end
-    local lastSig = ""
-    local function rebuild()
-        local names = getOptions(); local sig = table.concat(names, ",")
-        if sig == lastSig then return end
-        lastSig = sig
-        for _, c in ipairs(list:GetChildren()) do if c:IsA("TextButton") and c ~= selAll then c:Destroy() end end
-        rowRefs = {}
-        for i, nm in ipairs(names) do makeRow(nm, i) end
-        updateTrig()
-    end
-    local function repaintAll() for _, ref in pairs(rowRefs) do if ref.paint then ref.paint() end end end
-    local function selectAll(v)
-        if v and maxSelectFn then
-            local mx, n = maxSelectFn(), count()
-            for _, nm in ipairs(getOptions()) do if n >= mx then break end if not selectedSet[nm] then selectedSet[nm] = true; n = n + 1 end end
-        else
-            for _, nm in ipairs(getOptions()) do selectedSet[nm] = v or nil end
-        end
-        repaintAll(); updateTrig(); saveSettings()
-    end
-    track(selAll.MouseButton1Click:Connect(function()
-        local allOn = count() >= #getOptions() and #getOptions() > 0
-        selectAll(not allOn); selAll.Text = allOn and "SELECT ALL" or "CLEAR ALL"
-    end))
-    local expanded = false
-    track(trig.MouseButton1Click:Connect(function()
-        expanded = not expanded; list.Visible = expanded; ar.Text = expanded and "^" or "v"
-        if expanded then rebuild() end
-    end))
-    updateTrig(); rebuild()
-    spawnLoop(4, function()
-        if not parent.Parent or not parent.Parent.Visible then return end
-        rebuild()
-        if getStockFn then for nm, ref in pairs(rowRefs) do if ref.st then local s = getStockFn(nm) ref.st.Text = s > 0 and (s.."x") or "-" ref.st.TextColor3 = s > 0 and C.green or C.sub end end end
-    end)
-    return { selectAll = selectAll }
-end
--- text input row (e.g. webhook URL)
-local function inputRow(parent, name, desc, default, placeholder, onSet)
-    local f = card(parent); padAll(f, 12, 12, 10, 11); vlist(f, 6)
-    local n = Instance.new("TextLabel"); n.Size = UDim2.new(1,0,0,16); n.BackgroundTransparency = 1; n.Font = FM; n.Text = name; n.TextSize = 13; n.TextColor3 = C.text; n.TextXAlignment = Enum.TextXAlignment.Left; n.LayoutOrder = 1; n.Parent = f
-    if desc then local d = Instance.new("TextLabel"); d.Size = UDim2.new(1,0,0,0); d.AutomaticSize = Enum.AutomaticSize.Y; d.BackgroundTransparency = 1; d.Font = FR; d.Text = desc; d.TextSize = 11; d.TextColor3 = C.sub; d.TextWrapped = true; d.TextXAlignment = Enum.TextXAlignment.Left; d.LayoutOrder = 2; d.Parent = f end
-    local box = Instance.new("Frame"); box.Size = UDim2.new(1,0,0,30); box.BackgroundColor3 = C.inset; box.LayoutOrder = 3; box.Parent = f; corner(box,7); stroke(box, C.stroke,1)
-    local tb = Instance.new("TextBox"); tb.Size = UDim2.new(1,-16,1,0); tb.Position = UDim2.fromOffset(8,0); tb.BackgroundTransparency = 1; tb.Font = FR; tb.TextSize = 12; tb.TextColor3 = C.text
-    tb.PlaceholderText = placeholder or ""; tb.PlaceholderColor3 = C.sub; tb.Text = default or ""; tb.ClearTextOnFocus = false; tb.TextXAlignment = Enum.TextXAlignment.Left; tb.TextTruncate = Enum.TextTruncate.AtEnd; tb.Parent = box
-    track(tb.FocusLost:Connect(function() if onSet then onSet(tb.Text) end saveSettings() end))
-    return tb
-end
--- single-select dropdown (radio style) for things like Plant Pattern / Plant Source
 local function choiceRow(parent, name, desc, getOptions, getSel, onPick)
-    local f = card(parent); padAll(f, 12, 12, 10, 10)
-    textBlock(f, name, desc, 152)
-    local trig = Instance.new("TextButton"); trig.AnchorPoint = Vector2.new(1,0); trig.Position = UDim2.new(1,0,0,2); trig.Size = UDim2.fromOffset(138,30)
-    trig.AutoButtonColor = false; trig.BackgroundColor3 = C.inset; trig.Text = ""; trig.Parent = f; corner(trig,8); stroke(trig, C.stroke,1)
-    local tl = Instance.new("TextLabel"); tl.BackgroundTransparency = 1; tl.Position = UDim2.fromOffset(10,0); tl.Size = UDim2.new(1,-26,1,0); tl.Font = FM; tl.TextSize = 11; tl.TextColor3 = C.text; tl.TextXAlignment = Enum.TextXAlignment.Left; tl.TextTruncate = Enum.TextTruncate.AtEnd; tl.Parent = trig
-    local ar = Instance.new("TextLabel"); ar.BackgroundTransparency = 1; ar.AnchorPoint = Vector2.new(1,0.5); ar.Position = UDim2.new(1,-8,0.5,0); ar.Size = UDim2.fromOffset(12,12); ar.Font = FB; ar.Text = "v"; ar.TextSize = 11; ar.TextColor3 = C.sub; ar.Parent = trig
-    local list = Instance.new("Frame"); list.Size = UDim2.new(1,0,0,0); list.AutomaticSize = Enum.AutomaticSize.Y; list.BackgroundColor3 = C.inset; list.Visible = false; list.LayoutOrder = nextOrder(parent); list.Parent = parent; corner(list,8); stroke(list, C.stroke,1)
-    local ll = Instance.new("UIListLayout"); ll.Padding = UDim.new(0,2); ll.SortOrder = Enum.SortOrder.LayoutOrder; ll.Parent = list; padAll(list, 6)
-    local function refresh() tl.Text = tostring(getSel() or "—") end
-    local function rebuild()
-        for _, c in ipairs(list:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
-        for i, opt in ipairs(getOptions()) do
-            local sel = (getSel() == opt)
-            local r = Instance.new("TextButton"); r.Size = UDim2.new(1,0,0,30); r.BackgroundColor3 = sel and C.rowOn or C.card; r.Text = ""; r.AutoButtonColor = false; r.LayoutOrder = i; r.Parent = list; corner(r,8)
-            local lbl = Instance.new("TextLabel"); lbl.BackgroundTransparency = 1; lbl.Position = UDim2.fromOffset(12,0); lbl.Size = UDim2.new(1,-22,1,0); lbl.Font = FM; lbl.TextSize = 12; lbl.TextColor3 = sel and C.white or C.text; lbl.TextXAlignment = Enum.TextXAlignment.Left; lbl.TextTruncate = Enum.TextTruncate.AtEnd; lbl.Text = opt; lbl.Parent = r
-            track(r.MouseButton1Click:Connect(function() onPick(opt); refresh(); list.Visible = false; ar.Text = "v"; saveSettings() end))
-            track(r.MouseEnter:Connect(function() if getSel() ~= opt then TweenService:Create(r, TweenInfo.new(0.1), { BackgroundColor3 = C.cardHi }):Play() end end))
-            track(r.MouseLeave:Connect(function() if getSel() ~= opt then TweenService:Create(r, TweenInfo.new(0.1), { BackgroundColor3 = C.card }):Play() end end))
+    local dropdown
+    dropdown = parent:Dropdown({
+        Title = name,
+        Desc = desc,
+        Values = getOptions(),
+        Value = getSel(),
+        Callback = function(v)
+            if onPick then pcall(onPick, v) end
+            saveSettings()
         end
-    end
-    local expanded = false
-    track(trig.MouseButton1Click:Connect(function() expanded = not expanded; list.Visible = expanded; ar.Text = expanded and "^" or "v"; if expanded then rebuild() end end))
-    refresh()
-    spawnLoop(3, function() if not (parent.Parent and parent.Parent.Visible) then return end if list.Visible then rebuild() end refresh() end)
-    return { refresh = refresh }
+    })
+    return {
+        refresh = function()
+            pcall(function() dropdown:Select(getSel()) end)
+        end
+    }
 end
 
---========================= WINDOW CHROME =========================--
-do
-    local dragging, di, dp
-    track(Top.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = true di = i.Position dp = Main.Position end end))
-    track(UserInputService.InputChanged:Connect(function(i)
-        if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
-            local d = i.Position - di; Main.Position = UDim2.new(dp.X.Scale, dp.X.Offset + d.X, dp.Y.Scale, dp.Y.Offset + d.Y)
+local function inputRow(parent, name, desc, default, placeholder, onSet)
+    return parent:Input({
+        Title = name,
+        Desc = desc,
+        Value = default,
+        Placeholder = placeholder,
+        Callback = function(v)
+            if onSet then pcall(onSet, v) end
+            saveSettings()
         end
-    end))
-    track(UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then dragging = false end end))
+    })
 end
-local minimized = false
-track(MinBtn.MouseButton1Click:Connect(function()
-    minimized = not minimized; Body.Visible = not minimized; Status.Visible = not minimized
-    if MinPlusBar then MinPlusBar.Visible = minimized end  -- "-" becomes "+" when minimized
-    TweenService:Create(Main, TweenInfo.new(0.18, Enum.EasingStyle.Quad), { Size = minimized and UDim2.fromOffset(1020,42) or UDim2.fromOffset(1020,700) }):Play()
-end))
-local maximized = false
-track(MaxBtn.MouseButton1Click:Connect(function()
-    maximized = not maximized
-    TweenService:Create(Main, TweenInfo.new(0.18, Enum.EasingStyle.Quad), { Size = maximized and UDim2.fromOffset(1160,800) or UDim2.fromOffset(1020,700) }):Play()
-end))
 
 --========================== UNLOAD ================================--
 function Hub.unload()
     if not Hub.running then return end
-    saveSettings()  -- persist current settings before we tear everything down
+    saveSettings()
     Hub.running = false
     for _, c in ipairs(Hub.conns) do pcall(function() c:Disconnect() end) end
     Hub.conns = {}
@@ -834,13 +716,13 @@ function Hub.unload()
     local h = humanoid(); if h then h.WalkSpeed = 16; h.UseJumpPower = true; h.JumpPower = 50; h.PlatformStand = false end
     local c = char(); if c then for _, p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then pcall(function() p.CanCollide = true end) end end end
     for k, v in pairs(S) do if type(v) == "boolean" then S[k] = false end end
-    pcall(function() ScreenGui:Destroy() end)
+    pcall(function() Window:Destroy() end)
+    pcall(function() game:GetService("CoreGui"):FindFirstChild("GAG360Status"):Destroy() end)
     print("[360's GAG] unloaded.")
 end
 genv.GAG360_unload = Hub.unload
-genv.GAG360_notify = function(msg, title, col) notify(msg, title, col) end  -- external trigger for the toast
-track(CloseBtn.MouseButton1Click:Connect(function() Hub.unload() end))
-track(UserInputService.InputBegan:Connect(function(i, gpe) if not gpe and i.KeyCode == Enum.KeyCode.RightShift then Main.Visible = not Main.Visible end end))
+genv.GAG360_notify = function(msg, title, col) notify(msg, title, col) end
+track({ Disconnect = function() pcall(function() Window:Destroy() end) pcall(function() game:GetService("CoreGui"):FindFirstChild("GAG360Status"):Destroy() end) end })
 
 --========================== FEATURE LOOPS =========================--
 -- The actual plantable soil is the CollectionService "PlantArea" parts (two ~44x50
@@ -1545,10 +1427,97 @@ local function setOptimize(on)
 end
 
 --========================== PAGES =================================--
+-- Custom template rows for Timers and Stats tabs
+local function tRow(parent, leftText)
+    local f = Instance.new("Frame")
+    f.Size = UDim2.new(1, 0, 0, 36)
+    f.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    f.BackgroundTransparency = 0.2
+    f.BorderSizePixel = 0
+    f.Parent = parent
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent = f
+    
+    local s = Instance.new("UIStroke")
+    s.Color = Color3.fromRGB(50, 50, 55)
+    s.Thickness = 1
+    s.Parent = f
+    
+    local Lb = Instance.new("TextLabel")
+    Lb.BackgroundTransparency = 1
+    Lb.Size = UDim2.new(1, -100, 1, 0)
+    Lb.Position = UDim2.new(0, 12, 0, 0)
+    Lb.Font = Enum.Font.GothamMedium
+    Lb.Text = leftText
+    Lb.TextSize = 13
+    Lb.TextColor3 = Color3.fromRGB(200, 200, 205)
+    Lb.TextXAlignment = Enum.TextXAlignment.Left
+    Lb.Parent = f
+    
+    local Rb = Instance.new("TextLabel")
+    Rb.BackgroundTransparency = 1
+    Rb.Size = UDim2.new(0, 90, 1, 0)
+    Rb.Position = UDim2.new(1, -102, 0, 0)
+    Rb.Font = Enum.Font.GothamBold
+    Rb.Text = "-"
+    Rb.TextSize = 13
+    Rb.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Rb.TextXAlignment = Enum.TextXAlignment.Right
+    Rb.Parent = f
+    
+    return Lb, Rb
+end
+
+local function statRow(parent, lbl, col)
+    local f = Instance.new("Frame")
+    f.Size = UDim2.new(1, 0, 0, 36)
+    f.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    f.BackgroundTransparency = 0.2
+    f.BorderSizePixel = 0
+    f.Parent = parent
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent = f
+    
+    local s = Instance.new("UIStroke")
+    s.Color = Color3.fromRGB(50, 50, 55)
+    s.Thickness = 1
+    s.Parent = f
+    
+    local Lb = Instance.new("TextLabel")
+    Lb.BackgroundTransparency = 1
+    Lb.Size = UDim2.new(1, -160, 1, 0)
+    Lb.Position = UDim2.new(0, 12, 0, 0)
+    Lb.Font = Enum.Font.GothamMedium
+    Lb.Text = lbl
+    Lb.TextSize = 13
+    Lb.TextColor3 = Color3.fromRGB(200, 200, 205)
+    Lb.TextXAlignment = Enum.TextXAlignment.Left
+    Lb.Parent = f
+    
+    local Rb = Instance.new("TextLabel")
+    Rb.BackgroundTransparency = 1
+    Rb.Size = UDim2.new(0, 150, 1, 0)
+    Rb.Position = UDim2.new(1, -162, 0, 0)
+    Rb.Font = Enum.Font.GothamBold
+    Rb.Text = "-"
+    Rb.TextSize = 13
+    Rb.TextColor3 = col or Color3.fromRGB(232, 96, 114)
+    Rb.TextXAlignment = Enum.TextXAlignment.Right
+    Rb.TextTruncate = Enum.TextTruncate.AtEnd
+    Rb.Parent = f
+    
+    return Rb
+end
+
 addGroup("Automation")
+
 -- FARM
 do
-    local p = addTab("Farm")
+    local p = addTab("Farm", "solar:home-2-bold")
     local L, R = twoCol(p)
     -- Planting
     colTitle(L, "Planting"); subTitle(L, "Auto Plant")
@@ -1556,7 +1525,10 @@ do
     toggleRow(L, "Auto Plant", "Plants your owned seeds on a loop.", "autoPlant")
     dropdownRow(L, "Seeds To Plant", "Only seeds in your inventory. Empty = plant them all.", getOwnedSeedOptions, S.plantSeeds, nil, nil, seedPriceTag)
     choiceRow(L, "Plant Pattern", "How seeds are laid out on the soil.", function() return PLANT_PATTERNS end, function() return S.plantPattern end, function(v) S.plantPattern = v end)
-    choiceRow(L, "Plant Source", "My Seeds, or replant a saved garden snapshot.", function() local t={"My Seeds"} for _,n in ipairs(snapshotNames()) do t[#t+1]=n end return t end, function() return S.plantSource end, function(v) S.plantSource = v end)
+    
+    local plantSourceDropdown
+    plantSourceDropdown = choiceRow(L, "Plant Source", "My Seeds, or replant a saved garden snapshot.", function() local t={"My Seeds"} for _,n in ipairs(snapshotNames()) do t[#t+1]=n end return t end, function() return S.plantSource end, function(v) S.plantSource = v end)
+    
     toggleRow(L, "Smart Replant", "Only plant the most profitable seed you own.", "smartReplant")
     actionRow(L, "Plant Once Now", "Run a single planting pass.", function()
         local plot = myPlot(); if not plot then return end
@@ -1669,24 +1641,17 @@ do
 end
 
 addGroup("Garden")
+
 -- TIMERS
 do
-    local p = addTab("Timers")
+    local p = addTab("Timers", "solar:clock-circle-bold")
     local L, R = twoCol(p)
     colTitle(L, "Active Event"); subTitle(L, "Cycle")
-    local function tRow(parent, leftText)
-        local f = card(parent); padAll(f, 12, 12, 9, 9)
-        local Lb = Instance.new("TextLabel"); Lb.BackgroundTransparency = 1; Lb.Size = UDim2.new(1,-90,0,16); Lb.Font = FM; Lb.Text = leftText
-        Lb.TextSize = 13; Lb.TextColor3 = C.text; Lb.TextXAlignment = Enum.TextXAlignment.Left; Lb.Parent = f
-        local Rb = Instance.new("TextLabel"); Rb.AnchorPoint = Vector2.new(1,0); Rb.BackgroundTransparency = 1; Rb.Position = UDim2.new(1,0,0,0); Rb.Size = UDim2.fromOffset(86,16)
-        Rb.Font = FB; Rb.Text = "-"; Rb.TextSize = 13; Rb.TextColor3 = C.white; Rb.TextXAlignment = Enum.TextXAlignment.Right; Rb.Parent = f
-        return Lb, Rb
-    end
     local evL, evR = tRow(L, "-")
     subTitle(R, "Shop Restocks")
     local _, sR = tRow(R, "Seed shop"); local _, gR = tRow(R, "Gear shop"); local _, cR = tRow(R, "Crate shop")
     spawnLoop(1, function()
-        if not p.Visible then return end
+        if not Window.Visible then return end
         local raw, _, endsAt = currentEvent()
         evL.Text = eventNameOf(raw); evL.TextColor3 = eventColorOf(raw)
         evR.Text = endsAt and fmtClock(endsAt - os.time()) or "-"
@@ -1697,7 +1662,7 @@ end
 
 -- ITEMS
 do
-    local p = addTab("Items", "📦")
+    local p = addTab("Items", "solar:box-bold")
     local L, R = twoCol(p)
     subTitle(L, "Auto Open")
     toggleRow(L, "Auto Open Eggs", "Opens every egg you own on a loop.", "autoEggs")
@@ -1713,7 +1678,13 @@ do
     inputRow(R, "Snapshot Name", "Name to save the capture under.", snapName, "Snapshot 1", function(t) if t and t ~= "" then snapName = t end end)
     actionRow(R, "Snapshot This Garden", "Capture the garden you're standing in.", function()
         local ok, msg = captureSnapshot(snapName)
-        if ok then notify('Saved "' .. snapName .. '" - ' .. msg, "Garden Snapshot", C.green) else setStatus(tostring(msg)) end
+        if ok then
+            notify('Saved "' .. snapName .. '" - ' .. msg, "Garden Snapshot", C.green)
+            -- update plant source dropdown values instantly
+            if plantSourceDropdown and plantSourceDropdown.refresh then plantSourceDropdown.refresh() end
+        else
+            setStatus(tostring(msg))
+        end
     end)
     subTitle(R, "Auto Build")
     toggleRow(R, "Auto Build Snapshot", "Recreate the source snapshot's buildings (experimental).", "autoBuild")
@@ -1730,7 +1701,7 @@ end
 
 -- PETS
 do
-    local p = addTab("Pets", "🐾")
+    local p = addTab("Pets", "solar:bone-bold")
     local L, R = twoCol(p)
     colTitle(L, "Wild Animals"); subTitle(L, "Auto Tame")
     howItWorks(L, "Sits on wild animals and tames them. Pick which species to chase, or leave empty to tame every wild animal that spawns.")
@@ -1749,23 +1720,22 @@ do
 end
 
 addGroup("Tools")
+
 -- STATS
 do
-    local p = addTab("Stats")
+    local p = addTab("Stats", "solar:graph-new-bold")
     local L, R = twoCol(p)
-    local function statRow(parent, lbl, col)
-        local f = card(parent); padAll(f, 12, 12, 9, 9)
-        local Lb = Instance.new("TextLabel"); Lb.BackgroundTransparency = 1; Lb.Size = UDim2.new(1,-150,0,16); Lb.Font = FM; Lb.Text = lbl; Lb.TextSize = 13; Lb.TextColor3 = C.text; Lb.TextXAlignment = Enum.TextXAlignment.Left; Lb.Parent = f
-        local Rb = Instance.new("TextLabel"); Rb.AnchorPoint = Vector2.new(1,0); Rb.BackgroundTransparency = 1; Rb.Position = UDim2.new(1,0,0,0); Rb.Size = UDim2.fromOffset(146,16); Rb.Font = FB; Rb.Text = "-"; Rb.TextSize = 13; Rb.TextColor3 = col or C.accentText; Rb.TextXAlignment = Enum.TextXAlignment.Right; Rb.TextTruncate = Enum.TextTruncate.AtEnd; Rb.Parent = f
-        return Rb
-    end
     subTitle(L, "Profit Tracker")
-    local sMin = statRow(L, "Per Minute", C.green); local sHr = statRow(L, "Per Hour", C.green); local sSess = statRow(L, "Session Earned", C.green)
+    local sMin = statRow(L, "Per Minute", C.green)
+    local sHr = statRow(L, "Per Hour", C.green)
+    local sSess = statRow(L, "Session Earned", C.green)
     subTitle(R, "Inventory")
-    local sInv = statRow(R, "Backpack Value", C.green); local sCnt = statRow(R, "Fruit Count"); local sBest = statRow(R, "Best Crop To Plant")
+    local sInv = statRow(R, "Backpack Value", C.green)
+    local sCnt = statRow(R, "Fruit Count")
+    local sBest = statRow(R, "Best Crop To Plant")
     actionRow(R, "Rescan Inventory", "Recalculate backpack worth now.", function() local v, n = inventoryValue() setStatus("inventory worth " .. money(v) .. " (" .. n .. " fruit)") end)
     spawnLoop(1, function()
-        if not p.Visible then return end
+        if not Window.Visible then return end
         sMin.Text = money(Profit.perMin); sHr.Text = money(Profit.perHr); sSess.Text = money(Profit.session)
         local v, n = inventoryValue(); sInv.Text = money(v); sCnt.Text = n .. "x"
         local best = bestOwnedSeed(); local d = getData(); local cnt = (best and d and d.Inventory and d.Inventory.Seeds and d.Inventory.Seeds[best]) or 0
@@ -1775,7 +1745,7 @@ end
 
 -- TELEPORT
 do
-    local p = addTab("Teleport", "📍")
+    local p = addTab("Teleport", "solar:map-point-bold")
     local L, R = twoCol(p)
     colTitle(L, "Shops & NPCs"); subTitle(L, "Quick Travel")
     local function tpBtn(parent, label, pad)
@@ -1791,7 +1761,7 @@ end
 
 -- VISUAL
 do
-    local p = addTab("Visual", "👁️")
+    local p = addTab("Visual", "solar:eye-bold")
     local L = oneCol(p)
     colTitle(L, "ESP & Alerts"); subTitle(L, "Visual")
     howItWorks(L, "Outlines crops on screen and pings you about rare stock. Mutated-fruit ESP is distance-capped so it stays light.")
@@ -1801,8 +1771,9 @@ do
 end
 
 addGroup("Player")
+
 do
-    local p = addTab("Player", "🏃")
+    local p = addTab("Player", "solar:walking-bold")
     local L, R = twoCol(p)
     subTitle(L, "Movement")
     howItWorks(L, "The game snaps you back if you move too fast, so keep speeds moderate. The hub also paces its teleports in safe hops.")
@@ -1818,8 +1789,9 @@ do
 end
 
 addGroup("Misc")
+
 do
-    local p = addTab("Misc", "⚙️")
+    local p = addTab("Misc", "solar:settings-bold")
     local L = oneCol(p)
     colTitle(L, "Utility"); subTitle(L, "Auto Progress")
     howItWorks(L, "Hands-off progression: harvests your crops, sells them, buys the best seeds you can afford, plants them across the whole garden, and tames valuable pets (Raccoon, Dragonfly...) when they spawn. Leave it on and your coins + pets snowball.")
@@ -1831,15 +1803,16 @@ do
     actionRow(L, "Rejoin Server", "Teleport into the same place again.", function() pcall(function() game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer) end) end)
     actionRow(L, "Server Hop", "Request a fresh server.", function() pcall(function() Net.AntiAfk.RequestHop:Fire() end) setStatus("requesting new server") end)
     subTitle(L, "Info")
-    local info = card(L); padAll(info, 12, 12, 10, 10); vlist(info, 3)
-    local i1 = Instance.new("TextLabel"); i1.Size = UDim2.new(1,0,0,14); i1.BackgroundTransparency = 1; i1.Font = FR; i1.Text = "Right Shift toggles the menu. The X fully unloads everything."; i1.TextSize = 11; i1.TextColor3 = C.sub; i1.TextWrapped = true; i1.TextXAlignment = Enum.TextXAlignment.Left; i1.AutomaticSize = Enum.AutomaticSize.Y; i1.LayoutOrder = 1; i1.Parent = info
-    local i2 = Instance.new("TextLabel"); i2.Size = UDim2.new(1,0,0,14); i2.BackgroundTransparency = 1; i2.Font = FR; i2.Text = "UserId " .. LocalPlayer.UserId .. "   -   Plot " .. (myPlot() and myPlot().Name or "?"); i2.TextSize = 11; i2.TextColor3 = C.sub; i2.TextXAlignment = Enum.TextXAlignment.Left; i2.LayoutOrder = 2; i2.Parent = info
+    p:Paragraph({
+        Title = "Info",
+        Desc = "Right Shift toggles the menu. The X fully unloads everything.\nUserId " .. LocalPlayer.UserId .. "   -   Plot " .. (myPlot() and myPlot().Name or "?")
+    })
     actionRow(L, "Unload Hub", "Stop everything and close.", function() Hub.unload() end)
 end
 
 -- SERVER
 do
-    local p = addTab("Server")
+    local p = addTab("Server", "solar:server-bold")
     local L, R = twoCol(p)
     subTitle(L, "Server Hop")
     howItWorks(L, "Jump to other servers - handy for finding rare seed stock or fresh events. Low-pop finds the emptiest server.")
@@ -1854,12 +1827,17 @@ do
 end
 
 --========================== INIT ==================================--
-selectTab("Farm")
--- subtle open animation
--- whole hub scales as one unit (UIScale) so text, boxes & descriptions stay in proportion
-local UI_SCALE = 0.88
-UIScale.Scale = 0.74
-TweenService:Create(UIScale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = UI_SCALE }):Play()
+-- Background loop to refresh dropdown values dynamically
+spawnLoop(3.5, function()
+    if not Window.Visible then return end
+    for _, item in ipairs(dropdownsToRefresh) do
+        pcall(function()
+            item.element:Refresh(getFormattedValues(item.getOptions, item.priceFn, item.getStockFn))
+        end)
+    end
+end)
+
 notify("Loaded successfully - press Right Shift to toggle the menu.", "360's GAG", C.accent)
 setStatus("loaded - Right Shift to toggle")
 print("[360's GAG] loaded.")
+
